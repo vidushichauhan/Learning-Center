@@ -16,6 +16,7 @@ interface Repository {
 export default function ContentPage() {
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState(''); // State to track search input
   const router = useRouter(); // Router for navigation
 
   // Fetch repositories on component mount
@@ -34,16 +35,32 @@ export default function ContentPage() {
   const handleCourseClick = (repoName: string) => {
     router.push(`/course?repoName=${repoName}`); // Use query parameters
   };
-    
+
+  // Filter repositories based on the search term
+  const filteredRepositories = repositories.filter(
+    (repo) =>
+      repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (repo.description && repo.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-6 text-center">Courses Uploaded</h1>
+
+      {/* Search Bar */}
+      <input
+        type="text"
+        placeholder="Search courses..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="border p-2 rounded mb-6 w-full md:w-1/2 mx-auto block"
+      />
+
       {error ? (
         <p className="text-red-500 text-center">Error: {error}</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {repositories.map((repo) => (
+          {filteredRepositories.map((repo) => (
             <div
               key={repo.id}
               className="p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
