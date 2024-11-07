@@ -1,26 +1,13 @@
-// app/content/ContentPage.tsx
-
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '../AuthContext';
-
-interface Repository {
-  id: number;
-  name: string;
-  html_url: string;
-  description: string | null;
-  stargazers_count: number;
-  forks_count: number;
-}
 
 export default function ContentPage() {
   const { currentUser } = useAuth();
-  const [repositories, setRepositories] = useState<Repository[]>([]);
+  const [repositories, setRepositories] = useState([]);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const router = useRouter();
 
   useEffect(() => {
     fetch('http://localhost:4000/api/repos')
@@ -30,29 +17,39 @@ export default function ContentPage() {
         }
         return response.json();
       })
-      .then((data: Repository[]) => setRepositories(data))
+      .then((data) => setRepositories(data))
       .catch((err) => setError(err.message));
   }, []);
 
-  const handleCourseClick = (repoName: string) => {
-    router.push(`/course?repoName=${repoName}`);
-  };
+  const addToCart = async (courseId: string, courseName: string) => {
+    try {
+      const response = await fetch('http://localhost:4000/api/orders/add-to-cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUser?.id,
+          username: currentUser?.username,
+          courseId,
+          courseName,
+        }),
+      });
 
-  const handleEditCourse = (repoName: string) => {
-    router.push(`/edit-course?repoName=${repoName}`);
+      if (response.ok) {
+        alert('Course added to cart successfully');
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to add course to cart');
+      }
+    } catch (error) {
+      alert('An error occurred while adding the course to cart');
+    }
   };
-
-  const filteredRepositories = repositories.filter(
-    (repo) =>
-      repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (repo.description && repo.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6 text-center">
-        {currentUser?.role === 'teacher' ? 'Manage Courses' : 'Courses Uploaded'}
-      </h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">Courses Uploaded</h1>
 
       <input
         type="text"
@@ -66,29 +63,19 @@ export default function ContentPage() {
         <p className="text-red-500 text-center">Error: {error}</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRepositories.map((repo) => (
-            <div
-              key={repo.id}
-              className="p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => handleCourseClick(repo.name)}
-            >
+          {repositories.map((repo) => (
+            <div key={repo.id} className="p-4 border rounded-lg shadow-md">
               <h2 className="text-xl font-semibold text-blue-600">{repo.name}</h2>
-              <p className="mt-2 text-gray-700">
-                {repo.description || 'No description provided.'}
-              </p>
+              <p className="mt-2 text-gray-700">{repo.description || 'No description provided.'}</p>
               <div className="mt-4 text-sm text-gray-500">
                 ⭐ {repo.stargazers_count} | Forks: {repo.forks_count}
               </div>
-
-              {currentUser?.role === 'teacher' && (
+              {currentUser?.role === 'student' && (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditCourse(repo.name);
-                  }}
-                  className="mt-4 bg-green-600 text-white p-2 rounded"
+                  onClick={() => addToCart(repo.id, repo.name)}
+                  className="mt-4 bg-blue-600 text-white p-2 rounded"
                 >
-                  Edit Content
+                  Add to Cart
                 </button>
               )}
             </div>

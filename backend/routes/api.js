@@ -3,6 +3,7 @@ const axios = require('axios'); // Axios to fetch external data
 const router = express.Router();
 // backend/routes/api.js
 const User = require('../models/User'); // Adjust path as necessary
+const Order = require('../models/Order');
 const bcrypt = require('bcrypt'); // Add this line to import bcrypt
 
 
@@ -144,5 +145,30 @@ router.post('/signin', async (req, res) => {
   }
 });
 
+router.post('/add-to-cart', async (req, res) => {
+  try {
+    const { userId, username, courseId, courseName } = req.body;
+
+    // Find if there's an existing order for the user; if not, create a new one
+    let order = await Order.findOne({ userId });
+
+    if (order) {
+      // Add the course to the existing order
+      order.courses.push({ courseId, courseName });
+    } else {
+      // Create a new order
+      order = new Order({
+        userId,
+        username,
+        courses: [{ courseId, courseName }],
+      });
+    }
+
+    await order.save();
+    res.status(200).json({ message: 'Course added to cart successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add course to cart' });
+  }
+});
 
 module.exports = router;

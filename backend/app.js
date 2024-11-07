@@ -10,6 +10,8 @@ app.use(express.json()); // Parse JSON bodies
 
 app.use('/api', apiRoutes); // Mount API routes
 // backend/app.js
+const orderRoutes = require('./routes/orderRoutes');
+app.use('/api/orders', orderRoutes);
 
 const mongoose = require('mongoose');
 
