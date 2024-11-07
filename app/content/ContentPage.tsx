@@ -1,9 +1,11 @@
-'use client'; // Ensures this is a client component
+// app/content/ContentPage.tsx
+
+'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'; // Correct import for Next.js 13+
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../AuthContext';
 
-// Define the shape of a repository
 interface Repository {
   id: number;
   name: string;
@@ -14,12 +16,12 @@ interface Repository {
 }
 
 export default function ContentPage() {
+  const { currentUser } = useAuth();
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState(''); // State to track search input
-  const router = useRouter(); // Router for navigation
+  const [searchTerm, setSearchTerm] = useState('');
+  const router = useRouter();
 
-  // Fetch repositories on component mount
   useEffect(() => {
     fetch('http://localhost:4000/api/repos')
       .then((response) => {
@@ -33,10 +35,13 @@ export default function ContentPage() {
   }, []);
 
   const handleCourseClick = (repoName: string) => {
-    router.push(`/course?repoName=${repoName}`); // Use query parameters
+    router.push(`/course?repoName=${repoName}`);
   };
 
-  // Filter repositories based on the search term
+  const handleEditCourse = (repoName: string) => {
+    router.push(`/edit-course?repoName=${repoName}`);
+  };
+
   const filteredRepositories = repositories.filter(
     (repo) =>
       repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,9 +50,10 @@ export default function ContentPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6 text-center">Courses Uploaded</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">
+        {currentUser?.role === 'teacher' ? 'Manage Courses' : 'Courses Uploaded'}
+      </h1>
 
-      {/* Search Bar */}
       <input
         type="text"
         placeholder="Search courses..."
@@ -73,6 +79,18 @@ export default function ContentPage() {
               <div className="mt-4 text-sm text-gray-500">
                 ⭐ {repo.stargazers_count} | Forks: {repo.forks_count}
               </div>
+
+              {currentUser?.role === 'teacher' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditCourse(repo.name);
+                  }}
+                  className="mt-4 bg-green-600 text-white p-2 rounded"
+                >
+                  Edit Content
+                </button>
+              )}
             </div>
           ))}
         </div>

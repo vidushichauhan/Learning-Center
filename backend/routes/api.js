@@ -1,6 +1,10 @@
 const express = require('express');
 const axios = require('axios'); // Axios to fetch external data
 const router = express.Router();
+// backend/routes/api.js
+const User = require('../models/User'); // Adjust path as necessary
+const bcrypt = require('bcrypt'); // Add this line to import bcrypt
+
 
 // Fetch GitHub repositories
 router.get('/repos', async (req, res) => {
@@ -79,6 +83,64 @@ router.get('/repos/:repoName/contents/:path', async (req, res) => {
   } catch (error) {
     console.error('Error fetching path contents:', error.message);
     res.status(500).json({ error: 'Failed to fetch path contents.' });
+  }
+});
+
+// routes/api.js
+
+router.post('/signup', async (req, res) => {
+  const { username, email, password, role } = req.body; // Get role from the request
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      role, // Store role in the user document
+    });
+
+    await newUser.save();
+    res.status(201).json({ message: 'User created successfully' });
+  } catch (error) {
+    console.error('Error in signup:', error.message);
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+// Sign-In Route
+router.post('/signin', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    // Return the username and role on successful login
+    res.status(200).json({
+      message: 'Sign in successful',
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('Error during sign-in:', error.message);
+    res.status(500).json({ error: 'Server error during sign-in' });
   }
 });
 
