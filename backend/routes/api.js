@@ -1,21 +1,23 @@
+require('dotenv').config(); // Load environment variables
 const express = require('express');
-const axios = require('axios'); // Axios to fetch external data
+const axios = require('axios'); // Axios for HTTP requests
 const router = express.Router();
 const User = require('../models/User');
 const Order = require('../models/Order');
-const bcrypt = require('bcrypt'); 
+const bcrypt = require('bcrypt'); // For password hashing
+
+// Helper function to configure GitHub API requests with token
+const getGitHubConfig = () => ({
+  headers: {
+    Authorization: `token ${process.env.GITHUB_TOKEN}`, // Use the token from environment variable
+  },
+});
 
 // Fetch GitHub repositories
 router.get('/repos', async (req, res) => {
   const url = `https://api.github.com/users/LearningCenter-web/repos?per_page=100`;
-  const config = {
-    headers: {
-      Authorization: `token ${process.env.GITHUB_TOKEN}`, // Use the token from environment variable
-    },
-  };
-
   try {
-    const response = await axios.get(url, config);
+    const response = await axios.get(url, getGitHubConfig());
     res.status(200).json(response.data);
   } catch (error) {
     console.error('Error fetching repositories:', error.message);
@@ -27,14 +29,9 @@ router.get('/repos', async (req, res) => {
 router.get('/readme/:owner/:repo', async (req, res) => {
   const { owner, repo } = req.params;
   const url = `https://raw.githubusercontent.com/${owner}/${repo}/main/README.md`;
-  const config = {
-    headers: {
-      Authorization: `token ${process.env.GITHUB_TOKEN}`, // Use the token from environment variable
-    },
-  };
 
   try {
-    const response = await axios.get(url, config);
+    const response = await axios.get(url, getGitHubConfig());
     res.status(200).send(response.data); // Send README.md content as plain text
   } catch (error) {
     console.error('Error fetching README.md:', error.message);
@@ -50,16 +47,10 @@ router.get('/readme/:owner/:repo', async (req, res) => {
 router.get('/repos/:repoName/contents', async (req, res) => {
   const { repoName } = req.params;
   const url = `https://api.github.com/repos/LearningCenter-web/${repoName}/contents`;
-  const config = {
-    headers: {
-      Authorization: `token ${process.env.GITHUB_TOKEN}`, // Use the token from environment variable
-    },
-  };
 
   try {
-    const response = await axios.get(url, config);
-    const contents = response.data;
-    res.status(200).json(contents); // Send folder structure as JSON
+    const response = await axios.get(url, getGitHubConfig());
+    res.status(200).json(response.data); // Send folder structure as JSON
   } catch (error) {
     console.error('Error fetching repository contents:', error.message);
     res.status(500).json({ error: 'Failed to fetch repository contents.' });
@@ -71,14 +62,9 @@ router.get('/repos/:repoName/contents/*', async (req, res) => {
   const { repoName } = req.params;
   const path = req.params[0]; // Capture the full path after /contents/
   const url = `https://api.github.com/repos/LearningCenter-web/${repoName}/contents/${encodeURIComponent(path)}`;
-  const config = {
-    headers: {
-      Authorization: `token ${process.env.GITHUB_TOKEN}`, // Use the token from environment variable
-    },
-  };
 
   try {
-    const response = await axios.get(url, config);
+    const response = await axios.get(url, getGitHubConfig());
     res.status(200).json(response.data);
   } catch (error) {
     console.error('Error fetching path contents:', error.message);
@@ -89,3 +75,79 @@ router.get('/repos/:repoName/contents/*', async (req, res) => {
     }
   }
 });
+
+// Sign-Up Route
+router.post('/signup', async (req, res) => {
+  const { username, email, password, role } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ username, email, password: hashedPassword, role });
+    await newUser.save();
+    res.status(201).json({ message: 'User created successfully' });
+  } catch (error) {
+    console.error('Error in signup:', error.message);
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+// Sign-In Route
+router.post('/signin', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    res.status(200).json({
+      message: 'Sign in successful',
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('Error during sign-in:', error.message);
+    res.status(500).json({ error: 'Server error during sign-in' });
+  }
+});
+
+// Add Course to Cart
+router.post('/add-to-cart', async (req, res) => {
+  try {
+    const { userId, username, courseId, courseName } = req.body;
+
+    let order = await Order.findOne({ userId });
+
+    if (order) {
+      order.courses.push({ courseId, courseName });
+    } else {
+      order = new Order({
+        userId,
+        username,
+        courses: [{ courseId, courseName }],
+      });
+    }
+
+    await order.save();
+    res.status(200).json({ message: 'Course added to cart successfully' });
+  } catch (error) {
+    console.error('Error adding course to cart:', error.message);
+    res.status(500).json({ error: 'Failed to add course to cart' });
+  }
+});
+
+module.exports = router;
