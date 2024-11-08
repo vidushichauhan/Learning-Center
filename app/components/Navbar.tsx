@@ -2,16 +2,21 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const router = useRouter();
 
   const handleOrderCartClick = () => {
     router.push('/order-cart'); // Navigate to order cart page
+  };
+
+  const handleLogout = () => {
+    logout(); // Call the logout function from AuthContext
+    router.push('/'); // Redirect to the homepage or login page
   };
 
   return (
@@ -28,7 +33,15 @@ export default function Navbar() {
             </button>
           )}
           {currentUser ? (
-            <button className="text-white bg-blue-600 p-2 rounded-lg">{currentUser.username}</button>
+            <>
+              <span className="text-white bg-blue-600 p-2 rounded-lg">{currentUser.username}</span>
+              <button
+                onClick={handleLogout}
+                className="text-white bg-red-600 p-2 rounded-lg hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </>
           ) : (
             <a href="/signup" className="text-white bg-blue-600 p-2 rounded-lg">Sign Up</a>
           )}

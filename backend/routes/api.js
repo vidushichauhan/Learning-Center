@@ -1,18 +1,21 @@
 const express = require('express');
 const axios = require('axios'); // Axios to fetch external data
 const router = express.Router();
-// backend/routes/api.js
-const User = require('../models/User'); // Adjust path as necessary
+const User = require('../models/User');
 const Order = require('../models/Order');
-const bcrypt = require('bcrypt'); // Add this line to import bcrypt
-
+const bcrypt = require('bcrypt'); 
 
 // Fetch GitHub repositories
 router.get('/repos', async (req, res) => {
   const url = `https://api.github.com/users/LearningCenter-web/repos?per_page=100`;
+  const config = {
+    headers: {
+      Authorization: `token ${process.env.GITHUB_TOKEN}`, // Use the token from environment variable
+    },
+  };
 
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, config);
     res.status(200).json(response.data);
   } catch (error) {
     console.error('Error fetching repositories:', error.message);
@@ -23,11 +26,15 @@ router.get('/repos', async (req, res) => {
 // Fetch README.md from a repository
 router.get('/readme/:owner/:repo', async (req, res) => {
   const { owner, repo } = req.params;
-  console.log(repo);
   const url = `https://raw.githubusercontent.com/${owner}/${repo}/main/README.md`;
+  const config = {
+    headers: {
+      Authorization: `token ${process.env.GITHUB_TOKEN}`, // Use the token from environment variable
+    },
+  };
 
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, config);
     res.status(200).send(response.data); // Send README.md content as plain text
   } catch (error) {
     console.error('Error fetching README.md:', error.message);
@@ -39,13 +46,39 @@ router.get('/readme/:owner/:repo', async (req, res) => {
   }
 });
 
+// Fetch folder structure from GitHub repository
+router.get('/repos/:repoName/contents', async (req, res) => {
+  const { repoName } = req.params;
+  const url = `https://api.github.com/repos/LearningCenter-web/${repoName}/contents`;
+  const config = {
+    headers: {
+      Authorization: `token ${process.env.GITHUB_TOKEN}`, // Use the token from environment variable
+    },
+  };
+
+  try {
+    const response = await axios.get(url, config);
+    const contents = response.data;
+    res.status(200).json(contents); // Send folder structure as JSON
+  } catch (error) {
+    console.error('Error fetching repository contents:', error.message);
+    res.status(500).json({ error: 'Failed to fetch repository contents.' });
+  }
+});
+
+// Fetch contents of a specific path in a repository
 router.get('/repos/:repoName/contents/*', async (req, res) => {
   const { repoName } = req.params;
   const path = req.params[0]; // Capture the full path after /contents/
   const url = `https://api.github.com/repos/LearningCenter-web/${repoName}/contents/${encodeURIComponent(path)}`;
+  const config = {
+    headers: {
+      Authorization: `token ${process.env.GITHUB_TOKEN}`, // Use the token from environment variable
+    },
+  };
 
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, config);
     res.status(200).json(response.data);
   } catch (error) {
     console.error('Error fetching path contents:', error.message);
@@ -56,119 +89,3 @@ router.get('/repos/:repoName/contents/*', async (req, res) => {
     }
   }
 });
-
-// Fetch folder structure from GitHub repository
-router.get('/repos/:repoName/contents', async (req, res) => {
-  const { repoName } = req.params;
-  const url = `https://api.github.com/repos/LearningCenter-web/${repoName}/contents`;
-
-  try {
-    const response = await axios.get(url);
-    const contents = response.data;
-    res.status(200).json(contents); // Send folder structure as JSON
-  } catch (error) {
-    console.error('Error fetching repository contents:', error.message);
-    res.status(500).json({ error: 'Failed to fetch repository contents.' });
-  }
-});
-
-
-// Fetch contents of a specific path in a repository
-router.get('/repos/:repoName/contents/:path', async (req, res) => {
-  const { repoName, path } = req.params;
-  const url = `https://api.github.com/repos/LearningCenter-web/${repoName}/contents/${path}`;
-
-  try {
-    const response = await axios.get(url);
-    res.status(200).json(response.data);
-  } catch (error) {
-    console.error('Error fetching path contents:', error.message);
-    res.status(500).json({ error: 'Failed to fetch path contents.' });
-  }
-});
-
-// routes/api.js
-
-router.post('/signup', async (req, res) => {
-  const { username, email, password, role } = req.body; // Get role from the request
-
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({
-      username,
-      email,
-      password: hashedPassword,
-      role, // Store role in the user document
-    });
-
-    await newUser.save();
-    res.status(201).json({ message: 'User created successfully' });
-  } catch (error) {
-    console.error('Error in signup:', error.message);
-    res.status(500).json({ error: 'Failed to create user' });
-  }
-});
-
-// Sign-In Route
-router.post('/signin', async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ error: 'Invalid email or password' });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid email or password' });
-    }
-
-    // Return the username and role on successful login
-    res.status(200).json({
-      message: 'Sign in successful',
-      user: {
-        id: user._id,
-        username: user.username,
-        role: user.role,
-      },
-    });
-  } catch (error) {
-    console.error('Error during sign-in:', error.message);
-    res.status(500).json({ error: 'Server error during sign-in' });
-  }
-});
-
-router.post('/add-to-cart', async (req, res) => {
-  try {
-    const { userId, username, courseId, courseName } = req.body;
-
-    // Find if there's an existing order for the user; if not, create a new one
-    let order = await Order.findOne({ userId });
-
-    if (order) {
-      // Add the course to the existing order
-      order.courses.push({ courseId, courseName });
-    } else {
-      // Create a new order
-      order = new Order({
-        userId,
-        username,
-        courses: [{ courseId, courseName }],
-      });
-    }
-
-    await order.save();
-    res.status(200).json({ message: 'Course added to cart successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to add course to cart' });
-  }
-});
-
-module.exports = router;

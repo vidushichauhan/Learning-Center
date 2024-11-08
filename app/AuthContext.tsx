@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface User {
+  id: string;
   username: string;
   role: string;
 }
@@ -10,6 +11,7 @@ interface User {
 interface AuthContextType {
   currentUser: User | null;
   setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>;
+  logout: () => void; // Add logout to the context type
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,8 +36,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentUser]);
 
+  // Define the logout function
+  const logout = () => {
+    setCurrentUser(null); // Clear user from state
+    localStorage.removeItem('currentUser'); // Clear user from localStorage
+  };
+
   return (
-    <AuthContext.Provider value={{ currentUser, setCurrentUser }}>
+    <AuthContext.Provider value={{ currentUser, setCurrentUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
