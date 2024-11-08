@@ -84,6 +84,10 @@ export default function ContentPage() {
     router.push(`/course?repoName=${repoName}`);
   };
 
+  const handleEditCourse = (repoName: string) => {
+    router.push(`/edit-course?repoName=${repoName}`);
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -146,6 +150,17 @@ export default function ContentPage() {
                   className="mt-4 bg-blue-600 text-white p-2 rounded"
                 >
                   Add to Cart
+                </button>
+              )}
+              {currentUser?.role === 'teacher' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditCourse(repo.name);
+                  }}
+                  className="mt-4 bg-green-600 text-white p-2 rounded"
+                >
+                  Edit
                 </button>
               )}
             </div>
