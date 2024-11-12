@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation'; // Use correct imports
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface RepoContent {
@@ -14,10 +14,12 @@ export default function CoursePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const repoName = searchParams.get('repoName');
-  const folderPath = searchParams.get('path') || ''; // Track folder paths
+  const folderPath = searchParams.get('path') || '';
 
   const [contents, setContents] = useState<RepoContent[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedModule, setSelectedModule] = useState<RepoContent | null>(null);
+  const [fileContent, setFileContent] = useState<string | null>(null);
+  const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,57 +40,112 @@ export default function CoursePage() {
           setLoading(false);
         })
         .catch((err) => {
-          setError(err.message);
+          console.error(err.message);
           setLoading(false);
         });
     }
   }, [repoName, folderPath]);
 
-  const handleFolderClick = (path: string) => {
-    router.push(`/course?repoName=${repoName}&path=${path}`);
+  const handleModuleClick = (module: RepoContent) => {
+    setSelectedModule(module);
+
+    // Mark module as completed
+    if (!completedModules.includes(module.name)) {
+      setCompletedModules((prev) => [...prev, module.name]);
+    }
+
+    // Fetch content for files
+    if (module.type === 'file') {
+      fetch(`http://localhost:4000/api/repos/${repoName}/raw/${module.path}`)
+        .then((response) => response.text())
+        .then((data) => setFileContent(data))
+        .catch((err) => console.error('Error fetching file content:', err.message));
+    } else {
+      setFileContent(null);
+    }
   };
 
   if (loading) {
-    return <p className="text-center text-xl text-gray-500">Loading...</p>;
-  }
-
-  if (error) {
-    return <p className="text-center text-red-500 text-xl">Error: {error}</p>;
+    return <p className="text-center text-xl text-gray-500 mt-4">Loading...</p>;
   }
 
   return (
-    <div className="p-8 min-h-screen bg-gray-50">
-      <h1 className="text-4xl font-bold mb-8 text-center text-gray-800">{repoName}</h1>
+    <div className="flex min-h-screen mt-20">
+      {/* Sidebar */}
+      <div className="w-1/4 bg-gray-100 p-4 border-r">
+        <h2 className="text-lg font-bold mb-4">Course Content</h2>
+        <ul className="space-y-2">
+          {contents.map((item) => (
+            <li
+              key={item.path}
+              onClick={() => handleModuleClick(item)}
+              className={`p-2 rounded cursor-pointer ${
+                completedModules.includes(item.name) ? 'bg-green-200' : 'bg-white'
+              } hover:bg-gray-200`}
+            >
+              {item.type === 'dir' ? '📂' : '📄'} {item.name}
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      <ul className="space-y-4">
-        {contents.map((item) => (
-          <li
-            key={item.path}
-            className="group flex items-center justify-between p-4 bg-white rounded-lg shadow hover:shadow-lg transition-all duration-200"
-          >
-            {item.type === 'dir' ? (
-              <span
-                onClick={() => handleFolderClick(item.path)}
-                className="cursor-pointer text-lg font-semibold text-blue-600 group-hover:underline"
-              >
-                📂 {item.name}
-              </span>
+      {/* Content Area */}
+      <div className="w-3/4 p-4 mt-4">
+        {selectedModule ? (
+          selectedModule.type === 'file' ? (
+            selectedModule.name.endsWith('.md') && fileContent ? (
+              <div>
+                <h3 className="text-xl font-bold">{selectedModule.name}</h3>
+                <pre className="bg-gray-100 p-4 rounded mt-4">{fileContent}</pre>
+              </div>
+            ) : selectedModule.name.endsWith('.mp4') ? (
+              <div>
+                <h3 className="text-xl font-bold">{selectedModule.name}</h3>
+                <video
+                  controls
+                  className="w-full mt-4 max-h-[500px]" // Restrict video size
+                  src={selectedModule.download_url || undefined}
+                ></video>
+              </div>
             ) : (
-              <a
-                href={item.download_url || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-lg font-semibold text-blue-500 hover:underline"
-              >
-                📄 {item.name}
-              </a>
-            )}
-            <span className="text-sm text-gray-400">
-              {item.type === 'dir' ? 'Folder' : 'File'}
-            </span>
-          </li>
-        ))}
-      </ul>
+              <div>
+                <h3 className="text-xl font-bold">{selectedModule.name}</h3>
+                {selectedModule.name.match(/\.(png|jpg|jpeg|gif)$/i) ? (
+                  <div>
+                    <img
+                      src={selectedModule.download_url || undefined}
+                      alt={selectedModule.name}
+                      className="w-full mt-4 rounded border max-h-[500px] object-contain"
+                    />
+                    <a
+                      href={selectedModule.download_url || undefined}
+                      download={selectedModule.name}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-block text-blue-600 underline"
+                    >
+                      Download Image
+                    </a>
+                  </div>
+                ) : (
+                  <a
+                    href={selectedModule.download_url || undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline mt-4 block"
+                  >
+                    Download File
+                  </a>
+                )}
+              </div>
+            )
+          ) : (
+            <p className="text-gray-600 mt-4">This folder is empty or not viewable.</p>
+          )
+        ) : (
+          <p className="text-gray-600 mt-4">Select a module to view its content.</p>
+        )}
+      </div>
     </div>
   );
 }
