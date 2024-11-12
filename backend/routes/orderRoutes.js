@@ -8,13 +8,12 @@ router.post('/add-to-cart', async (req, res) => {
   try {
     const { userId, username, courseId, courseName } = req.body;
 
-    // Check if an order exists for the user
     let order = await Order.findOne({ userId });
 
     if (order) {
-      // Add the course if it's not already in the cart
-      if (!order.courses.some(course => course.courseId.toString() === courseId)) {
-        order.courses.push({ courseId, courseName });
+      // Check if the course is already in the cart
+      if (!order.courses.some(course => course.courseId === String(courseId))) {
+        order.courses.push({ courseId: String(courseId), courseName }); // Convert to String
         await order.save();
       }
     } else {
@@ -22,16 +21,36 @@ router.post('/add-to-cart', async (req, res) => {
       order = new Order({
         userId,
         username,
-        courses: [{ courseId, courseName }],
+        courses: [{ courseId: String(courseId), courseName }], // Convert to String
       });
       await order.save();
     }
 
     res.status(200).json({ message: 'Course added to cart successfully' });
   } catch (error) {
-    console.error('Error adding course to cart:', error);
+    console.error('Error adding course to cart:', error.message);
     res.status(500).json({ error: 'Failed to add course to cart' });
   }
 });
+
+// backend/routes/orderRoutes.js
+
+router.get('/cart/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const order = await Order.findOne({ userId }).populate('courses.courseId'); // Use populate if courseId references another model
+
+    if (!order) {
+      return res.status(404).json({ error: 'Cart not found' });
+    }
+
+    res.status(200).json(order.courses);
+  } catch (error) {
+    console.error('Error fetching cart items:', error.message);
+    res.status(500).json({ error: 'Failed to fetch cart items' });
+  }
+});
+
 
 module.exports = router;

@@ -64,7 +64,7 @@ export default function AuthPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setCurrentUser({ username: data.user.username, role: data.user.role });
+        setCurrentUser({ id: data.user.id, username: data.user.username, role: data.user.role });
         setSignInError(null);
         console.log('Sign in successful');
         

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -38,22 +38,47 @@ export default function ContentPage() {
 
   const fetchCourseImage = async (repoName: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/repos/${repoName}/contents`);
+      const response = await fetch(`http://localhost:4000/api/repos/${repoName}/contents/image`);
+  
+      if (!response.ok) {
+        throw new Error("Image folder not found");
+      }
+  
       const contents = await response.json();
-
-      const imageFile = contents.find(
-        (file: any) => file.type === 'file' && (file.name === 'image.jpg' || file.name === 'thumbnail.png')
-      );
-
+  
+      if (Array.isArray(contents)) {
+        const imageFile = contents.find(
+          (file: any) => file.type === 'file' && (file.name === 'image.jpg' || file.name === 'download.png')
+        );
+  
+        const imageUrl = imageFile ? imageFile.download_url : '';
+  
+        if (imageUrl) {
+          console.log(`Image URL for ${repoName}:`, JSON.stringify({ imageUrl }));
+        } else {
+          console.warn(`No suitable image found for ${repoName}`);
+        }
+  
+        setCourseImages((prevImages) => ({
+          ...prevImages,
+          [repoName]: imageUrl,
+        }));
+      } else {
+        console.warn(`Contents for ${repoName} is not an array or image not found.`);
+        setCourseImages((prevImages) => ({
+          ...prevImages,
+          [repoName]: '', // Empty string triggers the initials display
+        }));
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch image for ${repoName}:`, error.message);
       setCourseImages((prevImages) => ({
         ...prevImages,
-        [repoName]: imageFile ? imageFile.download_url : '',
+        [repoName]: '', // Empty string triggers the initials display
       }));
-    } catch (error) {
-      console.error(`Failed to fetch image for ${repoName}:`, error);
     }
   };
-
+  
   const addToCart = async (courseId: number, courseName: string) => {
     try {
       const response = await fetch('http://localhost:4000/api/orders/add-to-cart', {
@@ -129,6 +154,10 @@ export default function ContentPage() {
                   src={courseImages[repo.name]}
                   alt={`${repo.name} cover`}
                   className="w-full h-40 object-cover rounded"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = ''; // Trigger fallback
+                  }}
                 />
               ) : (
                 <div className="w-full h-40 flex items-center justify-center bg-gray-200 rounded">

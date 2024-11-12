@@ -15,8 +15,7 @@ const orderSchema = new mongoose.Schema({
   courses: [
     {
       courseId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course', // assuming you have a Course model
+        type: String, // Change to String
         required: true,
       },
       courseName: {
@@ -30,5 +29,6 @@ const orderSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
 
 module.exports = mongoose.model('Order', orderSchema);

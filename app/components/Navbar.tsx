@@ -57,7 +57,7 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <a href="/signup" className="text-white bg-blue-600 px-4 py-2 rounded-lg">Sign Up</a>
+            <a href="/signup" className="text-white bg-blue-600 px-4 py-2 rounded-lg">Sign Up/Sign In</a>
           )}
         </div>
       </div>
