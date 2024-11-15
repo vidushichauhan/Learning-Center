@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface RepoContent {
   name: string;
@@ -20,7 +21,17 @@ export default function CoursePage() {
   const [selectedModule, setSelectedModule] = useState<RepoContent | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [completedModules, setCompletedModules] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load completed modules from local storage
+  useEffect(() => {
+    const savedProgress = localStorage.getItem('completedModules');
+    if (savedProgress) {
+      setCompletedModules(JSON.parse(savedProgress));
+    }
+  }, []);
 
   // Fetch initial folder contents
   useEffect(() => {
@@ -35,6 +46,7 @@ export default function CoursePage() {
       : `http://localhost:4000/api/repos/${repoName}/contents`;
 
     setLoading(true);
+    setError(null);
     fetch(apiUrl)
       .then((response) => {
         if (!response.ok) {
@@ -52,17 +64,19 @@ export default function CoursePage() {
       })
       .catch((err) => {
         console.error(err.message);
+        setError('Error loading folder contents. Please try again.');
         setLoading(false);
       });
   };
 
-  // Handle click on a module or file
   const handleModuleClick = (module: RepoContent) => {
     setSelectedModule(module);
 
-    // Mark module as completed
+    // Mark module as completed and persist in local storage
     if (!completedModules.includes(module.path)) {
-      setCompletedModules((prev) => [...prev, module.path]);
+      const updatedProgress = [...completedModules, module.path];
+      setCompletedModules(updatedProgress);
+      localStorage.setItem('completedModules', JSON.stringify(updatedProgress));
     }
 
     // Fetch file content if it's a file
@@ -83,7 +97,15 @@ export default function CoursePage() {
     }
   };
 
-  // Render loading state
+  const filteredContents = contents.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (subDirectories[item.path] &&
+        subDirectories[item.path].some((subItem) =>
+          subItem.name.toLowerCase().includes(searchTerm.toLowerCase())
+        ))
+  );
+
   if (loading) {
     return <p className="text-center text-xl text-gray-500">Loading...</p>;
   }
@@ -93,8 +115,16 @@ export default function CoursePage() {
       {/* Sidebar */}
       <div className="w-1/4 bg-gray-100 p-4 border-r overflow-y-auto">
         <h2 className="text-lg font-bold mb-4">Course Content</h2>
+        <input
+          type="text"
+          placeholder="Search modules..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border p-2 rounded w-full mb-4"
+        />
+        {error && <p className="text-red-500">{error}</p>}
         <ul className="space-y-2">
-          {contents.map((item) => (
+          {filteredContents.map((item) => (
             <li key={item.path}>
               <div
                 onClick={() => handleModuleClick(item)}
@@ -127,58 +157,57 @@ export default function CoursePage() {
 
       {/* Content Area */}
       <div className="w-3/4 p-4 flex flex-col items-center">
-  {selectedModule ? (
-    selectedModule.type === 'file' ? (
-      selectedModule.name.endsWith('.md') && fileContent ? (
-        <div className="w-full max-w-3xl">
-          <h3 className="text-xl font-bold mb-4">{selectedModule.name}</h3>
-          <pre className="bg-gray-100 p-4 rounded">{fileContent}</pre>
-        </div>
-      ) : selectedModule.name.endsWith('.mp4') ? (
-        <div className="w-full max-w-3xl flex flex-col items-center h-36">
-          <h3 className="text-xl font-bold mb-4">{selectedModule.name}</h3>
-          <video
-  controls
-  className="w-full h-80 rounded border shadow-md"
-  src={selectedModule.download_url || undefined}
-></video>
-
-        </div>
-      ) : selectedModule.name.match(/\.(png|jpg|jpeg|gif)$/i) ? (
-        <div className="w-full h-full rounded border shadow-md">
-          <h3 className="text-xl font-bold mb-4">{selectedModule.name}</h3>
-          <img
-            src={selectedModule.download_url || undefined}
-            alt={selectedModule.name}
-            className="rounded border shadow-md" // Medium-sized for images
-          />
-          <a
-            href={selectedModule.download_url || undefined}
-            download={selectedModule.name}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-block text-blue-600 underline"
-          >
-            Download Image
-          </a>
-        </div>
-      ) : (
-        <a
-          href={selectedModule.download_url || undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 underline"
-        >
-          Download File
-        </a>
-      )
-    ) : (
-      <p className="text-gray-600">This folder is empty or not viewable.</p>
-    )
-  ) : (
-    <p className="text-gray-600">Select a module to view its content.</p>
-  )}
-</div>
+        {selectedModule ? (
+          selectedModule.type === 'file' ? (
+            selectedModule.name.endsWith('.md') && fileContent ? (
+              <div className="w-full max-w-3xl">
+                <h3 className="text-xl font-bold mb-4">{selectedModule.name}</h3>
+                <ReactMarkdown className="bg-gray-100 p-4 rounded">{fileContent}</ReactMarkdown>
+              </div>
+            ) : selectedModule.name.endsWith('.mp4') ? (
+              <div className="w-full max-w-3xl">
+                <h3 className="text-xl font-bold mb-4">{selectedModule.name}</h3>
+                <video
+                  controls
+                  className="w-full h-80 rounded border shadow-md"
+                  src={selectedModule.download_url || undefined}
+                />
+              </div>
+            ) : selectedModule.name.match(/\.(png|jpg|jpeg|gif)$/i) ? (
+              <div className="w-full max-w-3xl">
+                <h3 className="text-xl font-bold mb-4">{selectedModule.name}</h3>
+                <img
+                  src={selectedModule.download_url || undefined}
+                  alt={selectedModule.name}
+                  className="rounded border shadow-md"
+                />
+                <a
+                  href={selectedModule.download_url || undefined}
+                  download={selectedModule.name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-block text-blue-600 underline"
+                >
+                  Download Image
+                </a>
+              </div>
+            ) : (
+              <a
+                href={selectedModule.download_url || undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline"
+              >
+                Download File
+              </a>
+            )
+          ) : (
+            <p className="text-gray-600">This folder is empty or not viewable.</p>
+          )
+        ) : (
+          <p className="text-gray-600">Select a module to view its content.</p>
+        )}
+      </div>
     </div>
   );
 }

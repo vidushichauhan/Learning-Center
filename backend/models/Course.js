@@ -1,11 +1,15 @@
 const mongoose = require('mongoose');
 
 const courseSchema = new mongoose.Schema({
-  title: String,
+  title: {
+    type: String,
+    required: true,
+    unique: true,
+  },
   modules: [
     {
-      title: String,
-      type: { type: String, enum: ['video', 'text'] }, // 'video' or 'text'
+      title: { type: String, required: true },
+      type: { type: String, enum: ['video', 'text'], required: true }, // 'video' or 'text'
       content: String, // Video URL or text content
       duration: String, // Duration for videos
     },
