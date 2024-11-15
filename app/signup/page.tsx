@@ -54,6 +54,7 @@ export default function AuthPage() {
 
   // Handle Sign In
   const handleSignIn = async (event: React.FormEvent) => {
+    localStorage.removeItem('completedModules');
     event.preventDefault();
     try {
       const response = await fetch('http://localhost:4000/api/signin', {
