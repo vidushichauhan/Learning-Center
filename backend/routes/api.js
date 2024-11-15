@@ -15,6 +15,32 @@ const getGitHubConfig = () => ({
   },
 });
 
+router.put('/update-profile', async (req, res) => {
+  const { userId, username, profileImage } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { username, profileImage },
+      { new: true } // Return the updated user
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+
 router.post('/signin', async (req, res) => {
   const { email, password } = req.body;
 

@@ -15,7 +15,9 @@ const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(cors()); // Enable CORS
-app.use(express.json()); // Parse JSON bodies
+// Increase the payload limit
+app.use(express.json({ limit: '50mb' })); // Set JSON body size limit
+app.use(express.urlencoded({ limit: '50mb', extended: true })); // Set URL-encoded body size limit
 
 // Route handlers
 app.use('/api', apiRoutes); // Mount API routes
@@ -39,7 +41,11 @@ app.get('/health', (req, res) => {
 // Global error handler (Optional)
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  if (err.type === 'entity.too.large') {
+    res.status(413).json({ error: 'Payload too large. Please reduce the size of the request.' });
+  } else {
+    res.status(500).json({ error: 'Something went wrong!' });
+  }
 });
 
 // Start server

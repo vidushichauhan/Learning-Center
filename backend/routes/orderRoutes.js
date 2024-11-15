@@ -52,5 +52,32 @@ router.get('/cart/:userId', async (req, res) => {
   }
 });
 
+router.get("/purchased/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const userOrders = await Order.find({ userId }).sort({ createdAt: -1 });
+    if (userOrders.length === 0) {
+      return res.status(404).json({ message: "No purchased courses found" });
+    }
+
+    const courses = userOrders.map((order) => {
+      return order.courses.map((course) => ({
+        courseId: course.courseId,
+        courseName: course.courseName,
+        purchasedAt: order.createdAt,
+      }));
+    });
+
+    // Flatten the array of arrays
+    const purchasedCourses = [].concat(...courses);
+
+    res.status(200).json(purchasedCourses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch purchased courses" });
+  }
+});
+
 
 module.exports = router;

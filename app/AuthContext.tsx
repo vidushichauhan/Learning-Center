@@ -3,17 +3,18 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 interface User {
-  id: string;
-  username: string;
-  role: string;
+  id: string; // Required property
+  username: string; // Required property
+  role: string; // Required property
+  profileImage?: string; // Optional property
 }
 
 interface AuthContextType {
   currentUser: User | null;
   setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>;
-  logout: () => void; // Add logout to the context type
-  completedModules: string[]; // Add completed modules
-  setCompletedModules: React.Dispatch<React.SetStateAction<string[]>>; // Update modules
+  logout: () => void;
+  completedModules: string[];
+  setCompletedModules: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,7 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [completedModules, setCompletedModules] = useState<string[]>([]);
 
-  // Check localStorage on initial load
+  // Load user and progress from localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem("currentUser");
     const storedProgress = localStorage.getItem("completedModules");
@@ -36,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Store user and progress data in localStorage whenever they change
+  // Save user and progress to localStorage
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem("currentUser", JSON.stringify(currentUser));
@@ -51,16 +52,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentUser, completedModules]);
 
-  // Define the logout function
   const logout = () => {
-    setCurrentUser(null); // Clear user from state
+    setCurrentUser(null); // Clear user
     setCompletedModules([]); // Clear progress
     localStorage.removeItem("completedModules");
-    localStorage.removeItem("currentUser"); // Clear user from localStorage
+    localStorage.removeItem("currentUser");
+  };
+
+  const updateProfile = (newUsername: string, profileImage?: string) => {
+    if (currentUser) {
+      const updatedUser: User = {
+        id: currentUser.id, // Ensure required properties are retained
+        username: newUsername,
+        role: currentUser.role, // Ensure role is retained
+        profileImage: profileImage || currentUser.profileImage, // Update or keep the existing image
+      };
+      setCurrentUser(updatedUser);
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, setCurrentUser, logout, completedModules, setCompletedModules }}>
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        setCurrentUser,
+        logout,
+        completedModules,
+        setCompletedModules,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
