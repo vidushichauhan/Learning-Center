@@ -1,93 +1,103 @@
 "use client";
 
-import { useState } from 'react';
+import { useState } from "react";
+import { useSearchParams } from "next/navigation"; // Use this to handle query parameters
 
 export default function EditCoursePage() {
-  const [folderPath, setFolderPath] = useState('');
+  const searchParams = useSearchParams(); // Get query parameters dynamically
+  const repoName = searchParams.get("repoName"); // Extract `repoName` from the URL
+  const [folderPath, setFolderPath] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
 
-  // Function to create folder
-  const handleCreateFolder = async () => {
-    try {
-      const response = await fetch('http://localhost:4000/api/create-folder', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ repoName: 'example-course-name', folderPath }), // Replace with actual repo name
-      });
-
-      if (response.ok) {
-        setUploadStatus('Folder created successfully!');
-      } else {
-        const data = await response.json();
-        setUploadStatus(data.error || 'Failed to create folder');
-      }
-    } catch (error) {
-      setUploadStatus('An error occurred while creating the folder');
+  // Function to handle file upload and folder creation
+  const handleAction = async () => {
+    if (!repoName) {
+      setUploadStatus("Repository name is missing in the URL.");
+      return;
     }
-  };
 
-  // Function to handle file upload
-  const handleFileUpload = async () => {
-    if (!file) return;
+    if (!folderPath.trim()) {
+      setUploadStatus("Please enter a folder path.");
+      return;
+    }
+
+    if (!file) {
+      setUploadStatus("Please select a file to upload.");
+      return;
+    }
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('repoName', 'example-course-name'); // Replace with actual repo name
-      formData.append('folderPath', folderPath); // Specify folder path
+      formData.append("repoName", repoName);
+      formData.append("folderPath", folderPath);
+      formData.append("file", file);
 
-      const response = await fetch('http://localhost:4000/api/upload-file', {
-        method: 'POST',
+      const response = await fetch("http://localhost:4000/api/handle-file", {
+        method: "POST",
         body: formData,
       });
 
       if (response.ok) {
-        setUploadStatus('File uploaded successfully!');
-      } else {
         const data = await response.json();
-        setUploadStatus(data.error || 'File upload failed');
+        setUploadStatus("File uploaded successfully!");
+      } else {
+        const errorData = await response.json();
+        setUploadStatus(errorData.error || "An error occurred while uploading the file.");
       }
     } catch (error) {
-      setUploadStatus('An error occurred while uploading the file');
+      setUploadStatus("An unexpected error occurred. Please try again.");
     }
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Edit Course</h1>
-      
-      {/* Folder Creation Section */}
-      <div className="mb-6">
-        <input
-          type="text"
-          placeholder="Folder path (e.g., week1)"
-          value={folderPath}
-          onChange={(e) => setFolderPath(e.target.value)}
-          className="border p-2 rounded w-full mb-2"
-        />
-        <button
-          onClick={handleCreateFolder}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          Create Folder
-        </button>
-      </div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-md animate-fadeIn">
+        <h1 className="text-2xl font-bold text-blue-600 mb-6 text-center">Learning Center</h1>
 
-      {/* File Upload Section */}
-      <div className="mb-4">
-        <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+        <div className="mb-6">
+          <label htmlFor="folderPath" className="block text-gray-700 font-medium mb-2">
+            Folder Path
+          </label>
+          <input
+            id="folderPath"
+            type="text"
+            placeholder="Enter folder path (e.g., week1)"
+            value={folderPath}
+            onChange={(e) => setFolderPath(e.target.value)}
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="fileUpload" className="block text-gray-700 font-medium mb-2">
+            Select File
+          </label>
+          <input
+            id="fileUpload"
+            type="file"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         <button
-          onClick={handleFileUpload}
-          className="mt-2 bg-blue-600 text-white px-4 py-2 rounded"
+          onClick={handleAction}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
         >
           Upload File
         </button>
-      </div>
 
-      {uploadStatus && <p className="text-gray-600">{uploadStatus}</p>}
+        {uploadStatus && (
+          <p
+            className={`mt-4 text-center ${
+              uploadStatus.includes("successfully") ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {uploadStatus}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

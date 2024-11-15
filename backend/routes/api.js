@@ -107,62 +107,68 @@ router.get('/repos/:repoName/contents/image', async (req, res) => {
   }
 });
 
-// Create a folder by adding an empty file in the specified directory dynamically
-router.post('/create-folder', async (req, res) => {
-  const { repoName, folderPath } = req.body;
-
-  if (!repoName || !folderPath) {
-    return res.status(400).json({ error: 'Repository name and folder path are required.' });
-  }
-
-  const url = `https://api.github.com/repos/${process.env.GITHUB_USER}/${repoName}/contents/${encodeURIComponent(folderPath)}/.keep`;
-  const message = `Create folder ${folderPath}`;
-
-  try {
-    const response = await axios.put(
-      url,
-      {
-        message,
-        content: Buffer.from('').toString('base64'), // Empty file content
-      },
-      getGitHubConfig()
-    );
-
-    res.status(200).json({ message: 'Folder created successfully', data: response.data });
-  } catch (error) {
-    console.error('Error creating folder:', error.message);
-    res.status(500).json({ error: 'Failed to create folder.' });
-  }
-});
-
-// Upload a file to a specified folder dynamically
-router.post('/upload-file', upload.single('file'), async (req, res) => {
+router.post("/handle-file", upload.single("file"), async (req, res) => {
   const { repoName, folderPath } = req.body;
   const file = req.file;
 
   if (!repoName || !folderPath || !file) {
-    return res.status(400).json({ error: 'Repository name, folder path, and file are required.' });
+    return res.status(400).json({
+      error: "Repository name, folder path, and file are required.",
+    });
   }
 
-  const fileContent = file.buffer.toString('base64'); // Convert file content to Base64
-  const filePath = `${folderPath}/${file.originalname}`;
-  const url = `https://api.github.com/repos/${process.env.GITHUB_USER}/${repoName}/contents/${filePath}`;
-  const message = `Upload file ${file.originalname}`;
+  const folderUrl = `https://api.github.com/repos/${process.env.GITHUB_USER}/${repoName}/contents/${encodeURIComponent(
+    folderPath
+  )}`;
+  const fileUrl = `https://api.github.com/repos/${process.env.GITHUB_USER}/${repoName}/contents/${encodeURIComponent(
+    folderPath
+  )}/${file.originalname}`;
 
   try {
-    const response = await axios.put(
-      url,
+    // Step 1: Check if folder exists
+    let folderExists = true;
+    try {
+      await axios.get(folderUrl, getGitHubConfig());
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        folderExists = false;
+      } else {
+        throw error; // Propagate unexpected errors
+      }
+    }
+
+    // Step 2: Create folder if it doesn't exist
+    if (!folderExists) {
+      const folderCreationResponse = await axios.put(
+        `${folderUrl}/.keep`, // Create an empty .keep file
+        {
+          message: `Create folder ${folderPath}`,
+          content: Buffer.from("").toString("base64"),
+        },
+        getGitHubConfig()
+      );
+      console.log("Folder created:", folderCreationResponse.data);
+    }
+
+    // Step 3: Upload the file
+    const fileUploadResponse = await axios.put(
+      fileUrl,
       {
-        message,
-        content: fileContent,
+        message: `Upload file ${file.originalname}`,
+        content: file.buffer.toString("base64"),
       },
       getGitHubConfig()
     );
 
-    res.status(200).json({ message: 'File uploaded successfully', data: response.data });
+    res.status(200).json({
+      message: "File uploaded successfully!",
+      data: fileUploadResponse.data,
+    });
   } catch (error) {
-    console.error('Error uploading file:', error.message);
-    res.status(500).json({ error: 'Failed to upload file.' });
+    console.error("Error handling file:", error.response?.data || error.message);
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data?.message || "Failed to handle file.",
+    });
   }
 });
 
