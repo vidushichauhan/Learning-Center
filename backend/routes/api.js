@@ -237,5 +237,18 @@ router.get('/repos/:repoName/raw/*', async (req, res) => {
   }
 });
 
+router.get('/proxy/readme', async (req, res) => {
+  const { repoName, path } = req.query;
+  const url = `https://raw.githubusercontent.com/LearningCenter-web/${repoName}/main/${path}`;
+
+  try {
+    const response = await axios.get(url);
+    res.status(200).send(response.data);
+  } catch (error) {
+    console.error('Error fetching README.md:', error.message);
+    res.status(500).json({ error: 'Failed to fetch README.md content.' });
+  }
+});
+
 
 module.exports = router;
