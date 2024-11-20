@@ -1,53 +1,53 @@
-// app/signup/page.tsx
-
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '../AuthContext';
-import Navbar from '../components/Navbar';
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../AuthContext";
+import Navbar from "../components/Navbar";
+import Player from "lottie-react";
+import AnimationData from "../public/Animation1.json";
 
 export default function AuthPage() {
   const router = useRouter();
-  const { setCurrentUser } = useAuth(); // Access setCurrentUser from context
+  const { setCurrentUser } = useAuth();
 
   // Sign Up state
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('student');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("student");
   const [signUpError, setSignUpError] = useState<string | null>(null);
   const [signUpSuccess, setSignUpSuccess] = useState<string | null>(null);
 
   // Sign In state
-  const [signInEmail, setSignInEmail] = useState('');
-  const [signInPassword, setSignInPassword] = useState('');
+  const [signInEmail, setSignInEmail] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
   const [signInError, setSignInError] = useState<string | null>(null);
 
   // Handle Sign Up
   const handleSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      const response = await fetch('http://localhost:4000/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("http://localhost:4000/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password, role }),
       });
 
       if (response.ok) {
-        setSignUpSuccess('Signup successful! Please sign in.');
+        setSignUpSuccess("Signup successful! Please sign in.");
         setSignUpError(null);
-        setUsername('');
-        setEmail('');
-        setPassword('');
-        setRole('student');
+        setUsername("");
+        setEmail("");
+        setPassword("");
+        setRole("student");
       } else {
         const data = await response.json();
-        setSignUpError(data.error || 'Signup failed');
+        setSignUpError(data.error || "Signup failed");
         setSignUpSuccess(null);
       }
     } catch (err) {
-      setSignUpError('Something went wrong');
+      setSignUpError("Something went wrong");
       setSignUpSuccess(null);
     }
   };
@@ -56,9 +56,9 @@ export default function AuthPage() {
   const handleSignIn = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      const response = await fetch('http://localhost:4000/api/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("http://localhost:4000/api/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: signInEmail, password: signInPassword }),
       });
 
@@ -66,16 +66,16 @@ export default function AuthPage() {
         const data = await response.json();
         setCurrentUser({ id: data.user.id, username: data.user.username, role: data.user.role });
         setSignInError(null);
-        console.log('Sign in successful');
-        
+        console.log("Sign in successful");
+
         // Redirect to main page
-        router.push('/');
+        router.push("/");
       } else {
         const data = await response.json();
-        setSignInError(data.error || 'Sign in failed');
+        setSignInError(data.error || "Sign in failed");
       }
     } catch (err) {
-      setSignInError('Something went wrong');
+      setSignInError("Something went wrong");
     }
   };
 
@@ -85,9 +85,9 @@ export default function AuthPage() {
       <Navbar />
 
       {/* Auth Page Content */}
-      <div className="flex flex-grow items-center justify-center">
+      <div className="flex flex-grow items-center justify-between mx-auto w-[90%] sm:space-x-10 lg:space-x-20 mt-10">
         {/* Sign Up Section */}
-        <div className="w-1/2 p-8 border-r border-gray-200 max-w-lg">
+        <div className="flex-1 m-5 p-8 shadow-xl rounded-2xl border-gray-200 bg-gray-50">
           <h2 className="text-3xl font-bold mb-4 text-center">Sign Up</h2>
           {signUpError && <p className="text-red-500 mb-4">{signUpError}</p>}
           {signUpSuccess && <p className="text-green-500 mb-4">{signUpSuccess}</p>}
@@ -97,7 +97,7 @@ export default function AuthPage() {
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="border p-2 rounded w-full"
+              className="border p-2 rounded-full w-full"
               required
             />
             <input
@@ -105,7 +105,7 @@ export default function AuthPage() {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border p-2 rounded w-full"
+              className="border p-2 rounded-full w-full"
               required
             />
             <input
@@ -113,34 +113,34 @@ export default function AuthPage() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="border p-2 rounded w-full"
+              className="border p-2 rounded-full w-full"
               required
             />
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Sign up as:
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Sign up as:</label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="border p-2 rounded w-full"
+                className="border p-2 rounded-full w-full"
                 required
               >
                 <option value="student">Student</option>
                 <option value="teacher">Teacher</option>
               </select>
             </div>
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-            >
-              Sign Up
-            </button>
+            <div className="justify-center flex">
+              <button
+                type="submit"
+                className="w-[40%] bg-blue-600 text-white py-2 rounded-full hover:bg-blue-700"
+              >
+                Sign Up
+              </button>
+            </div>
           </form>
         </div>
 
         {/* Sign In Section */}
-        <div className="w-1/2 p-8 max-w-lg">
+        <div className="flex-1 m-5 p-8 shadow-xl rounded-2xl bg-gray-50">
           <h2 className="text-3xl font-bold mb-4 text-center">Sign In</h2>
           {signInError && <p className="text-red-500 mb-4">{signInError}</p>}
           <form onSubmit={handleSignIn} className="space-y-4">
@@ -149,7 +149,7 @@ export default function AuthPage() {
               placeholder="Email"
               value={signInEmail}
               onChange={(e) => setSignInEmail(e.target.value)}
-              className="border p-2 rounded w-full"
+              className="border p-2 rounded-full w-full"
               required
             />
             <input
@@ -157,17 +157,24 @@ export default function AuthPage() {
               placeholder="Password"
               value={signInPassword}
               onChange={(e) => setSignInPassword(e.target.value)}
-              className="border p-2 rounded w-full"
+              className="border p-2 rounded-full w-full"
               required
             />
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-            >
-              Sign In
-            </button>
+            <div className="justify-center flex">
+              <button
+                type="submit"
+                className="w-[40%] bg-blue-600 text-white py-2 rounded-full hover:bg-blue-700"
+              >
+                Sign In
+              </button>
+            </div>
           </form>
         </div>
+      </div>
+
+      {/* Lottie Animation */}
+      <div className="absolute bottom-5 right-5">
+        <Player autoplay loop animationData={AnimationData} style={{ width: "300px", height: "300px" }} />
       </div>
     </div>
   );
