@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const orderSchema = new mongoose.Schema(
+const orderedClassSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -31,16 +31,11 @@ const orderSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ['completed', 'pending', 'canceled'],
+      enum: ['completed'],
       default: 'completed',
     },
   },
-  { timestamps: true } // Automatically adds createdAt and updatedAt fields
+  { timestamps: true }
 );
 
-// Add index for faster queries
-orderSchema.index({ userId: 1 });
-
-const Order = mongoose.model('Order', orderSchema);
-
-module.exports = { Order, orderSchema }; // Export both the model and schema
+module.exports = mongoose.model('OrderedClass', orderedClassSchema);

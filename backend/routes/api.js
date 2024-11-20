@@ -282,5 +282,52 @@ router.get('/proxy/readme', async (req, res) => {
   }
 });
 
+router.get('/readme/:repoName', async (req, res) => {
+  const { repoName } = req.params;
+  const url = `https://api.github.com/repos/${process.env.GITHUB_USER}/${repoName}/contents/README.md`;
+
+  try {
+    const response = await axios.get(url, getGitHubConfig());
+    const fileContent = Buffer.from(response.data.content, 'base64').toString('utf-8');
+
+    // Extract price and description
+    const priceMatch = fileContent.match(/Price:\s*\$(\d+(\.\d+)?)/i);
+    const descriptionMatch = fileContent.match(/Description:\s*(.*)/i);
+
+    const price = priceMatch ? priceMatch[1] : '0.00';
+    const description = descriptionMatch ? descriptionMatch[1] : 'No description provided';
+
+    res.status(200).json({ content: fileContent, price, description });
+  } catch (error) {
+    console.error('Error fetching README.md:', error.message);
+    res.status(500).json({ error: 'Failed to fetch README.md.' });
+  }
+});
+
+// Backend: Extract description and price from README.md
+const marked = require("marked"); // Use this to parse markdown if needed
+
+router.get("/readme/:repoName", async (req, res) => {
+  const { repoName } = req.params;
+  try {
+    const response = await axios.get(
+      `https://raw.githubusercontent.com/${process.env.GITHUB_USER}/${repoName}/main/README.md`
+    );
+    const content = response.data;
+
+    // Extract course description and price from the markdown content
+    const descriptionMatch = content.match(/Description:\s*(.+)/i);
+    const priceMatch = content.match(/Price:\s*\$(\d+(\.\d{1,2})?)/i);
+
+    const description = descriptionMatch ? descriptionMatch[1] : "No description available";
+    const price = priceMatch ? `$${priceMatch[1]}` : "Free";
+
+    res.status(200).json({ description, price });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ description: "No description available", price: "Free" });
+  }
+});
 
 module.exports = router;
+
