@@ -52,7 +52,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             >
               {item.type === "dir" ? "📂" : "📄"} {item.name}
             </div>
-            {/* Render subdirectories if they exist */}
             {subDirectories[item.path] && (
               <ul className="ml-4 space-y-2">
                 {subDirectories[item.path].map((subItem) => (
