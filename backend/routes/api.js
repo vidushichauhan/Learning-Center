@@ -40,6 +40,40 @@ router.put('/update-profile', async (req, res) => {
   }
 });
 
+router.post('/signup', async (req, res) => {
+  const { username, email, password, role } = req.body; // Destructure the request body
+
+  try {
+    // Check if a user with the provided email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'A user with this email already exists.' });
+    }
+
+    // Hash the password using bcrypt for security
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new user instance
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      role, // Store the user role (e.g., student or teacher)
+    });
+
+    // Save the user to the database
+    await newUser.save();
+
+    // Send a success response
+    res.status(201).json({ message: 'User registered successfully.' });
+  } catch (error) {
+    console.error('Error during user registration:', error.message);
+
+    // Return a generic server error response
+    res.status(500).json({ error: 'An error occurred while creating the user account.' });
+  }
+});
+
 
 router.post('/signin', async (req, res) => {
   const { email, password } = req.body;
