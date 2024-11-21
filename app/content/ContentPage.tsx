@@ -151,71 +151,77 @@ export default function ContentPage() {
         repo.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  return (
-    <div className="bg-gray-50 min-h-screen pt-8">
-      {/* Search Bar */}
-      <div className="flex items-center gap-3 max-w-lg ml-auto mb-8 justify-end p-4">
-        <input
-          type="text"
-          placeholder="What do you want to learn?"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-gray-600 text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full hover:bg-blue-700 focus:outline-none">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-white"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M12.9 14.32a8 8 0 111.414-1.414l4.243 4.243a1 1 0 01-1.414 1.414l-4.243-4.243zM8 14a6 6 0 100-12 6 6 0 000 12z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
-      </div>
+  return (<>
+    <div className="bg-gray-50 min-h-screen pt-8 px-7">
+  {/* Hero Section */}
+  <div className="flex flex-col md:flex-row items-center justify-between max-w-6xl mx-auto px-6 mb-8 space-y-6 md:space-y-0">
+    {/* Text Content */}
+<div className="text-left max-w-md md:mr-auto md:pr-6">
+  <p className="text-lg font-semibold text-gray-600 mb-2">Degree Programs</p>
+  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4">
+    Find a top degree that fits your life
+  </h1>
+  <p className="text-lg text-gray-700">
+    Breakthrough pricing on 100% online degrees from top universities.
+  </p>
+</div>
 
-      {/* Banner */}
-      <div className="text-left max-w-4xl ml-8 mb-4">
-        <p className="text-lg font-semibold text-gray-600 mb-2">
-          Degree Programs
-        </p>
-        <h1 className="text-5xl font-bold text-gray-900 leading-tight mb-4">
-          Find a top degree that fits your life
-        </h1>
-        <p className="text-lg text-gray-700">
-          Breakthrough pricing on 100% online degrees from top universities.
-        </p>
-      </div>
-      <BannerCarousel/>
 
-      {/* Course Grid */}
-      {error ? (
-        <ErrorMessage message={error} />
-      ) : (
-        <CourseGrid
-          repositories={filteredRepositories}
-          currentUserRole={currentUser?.role || ""}
-          onAddToCart={addToCart}
-          onEditCourse={handleEditCourse}
-          onCourseClick={handleCourseClick}
-          courseImages={courseImages}
-        />
-      )}
-
-      {showModal && (
-        <Modal
-          show={showModal}
-          message="You need to purchase this course to view its content."
-          onClose={handleModalClose}
-        />
-      )}
-
-      {/* Footer */}
-      <Footer />
+    {/* Search Bar */}
+    <div className="flex items-center gap-5 max-w-lg w-full md:w-full mt-6 md:mt-0">
+      <input
+        type="text"
+        placeholder="What do you want to learn?"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-gray-600 text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full hover:bg-blue-700 focus:outline-none">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5 text-white"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M12.9 14.32a8 8 0 111.414-1.414l4.243 4.243a1 1 0 01-1.414 1.414l-4.243-4.243zM8 14a6 6 0 100-12 6 6 0 000 12z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
     </div>
+  </div>
+
+  {/* Banner */}
+  <div className="mb-8">
+    <BannerCarousel />
+  </div>
+
+  {/* Course Grid */}
+  {error ? (
+    <ErrorMessage message={error} />
+  ) : (
+    <CourseGrid
+      repositories={filteredRepositories}
+      currentUserRole={currentUser?.role || ""}
+      onAddToCart={addToCart}
+      onEditCourse={handleEditCourse}
+      onCourseClick={handleCourseClick}
+      courseImages={courseImages}
+    />
+  )}
+
+  {showModal && (
+    <Modal
+      show={showModal}
+      message="You need to purchase this course to view its content."
+      onClose={handleModalClose}
+    />
+  )}
+</div>
+  {/* Footer */}
+  <Footer />
+</>
   );
 }

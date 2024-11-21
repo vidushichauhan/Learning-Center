@@ -100,12 +100,12 @@ export default function Navbar() {
             <>
               {currentUser.role === "student" && (
                 <button
-  onClick={() => router.push("/order-cart")}
-  className="flex items-center space-x-2 hover:underline cursor-pointer"
->
-  <FaShoppingCart size={18} className="text-white-600" /> {/* Cart icon */}
-  <span>Order Cart</span>
-</button>
+                  onClick={() => router.push("/order-cart")}
+                  className="flex items-center space-x-2 hover:underline cursor-pointer"
+                >
+                  <FaShoppingCart size={18} className="text-white-600" />
+                  <span>Order Cart</span>
+                </button>
               )}
 
               <div className="relative">
@@ -164,12 +164,15 @@ export default function Navbar() {
                       </div>
                     ) : (
                       <>
-                        <button
-                          onClick={() => router.push("/purchased-orders")}
-                          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        >
-                          Purchased Orders
-                        </button>
+                        {/* Purchased Orders visible for both students and teachers */}
+                        {(currentUser.role === "student") && (
+                          <button
+                            onClick={() => router.push("/purchased-orders")}
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                          >
+                            Purchased Orders
+                          </button>
+                        )}
                         <button
                           onClick={() => setEditingProfile(true)}
                           className="block w-full text-left px-4 py-2 hover:bg-gray-100"
