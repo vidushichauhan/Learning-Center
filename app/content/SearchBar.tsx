@@ -9,7 +9,7 @@ interface SearchBarProps {
       placeholder="Search courses..."
       value={searchTerm}
       onChange={(e) => onSearchChange(e.target.value)}
-      className="border p-2 rounded mb-6 w-full md:w-1/2 mx-auto block"
+      className="border p-2 rounded w-full md:w-1/2 mx-auto mb-10 block text-center"
     />
   );
   

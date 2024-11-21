@@ -3,18 +3,22 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import { useRouter } from "next/navigation";
+import Player from "lottie-react";
+import AnimationData from "../Public/Animation2.json";
 
 export default function Navbar() {
   const { currentUser, logout } = useAuth();
   const router = useRouter();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [newUsername, setNewUsername] = useState<string>("");
   const [editingProfile, setEditingProfile] = useState(false);
+  const [newUsername, setNewUsername] = useState<string>("");
 
   useEffect(() => {
     if (currentUser) {
-      setProfileImage(currentUser.profileImage || localStorage.getItem("profileImage") || null);
+      setProfileImage(
+        currentUser.profileImage || localStorage.getItem("profileImage") || null
+      );
     }
   }, [currentUser]);
 
@@ -68,18 +72,31 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-500 fixed w-full z-20 top-0 left-0 p-4">
-      <div className="max-w-screen-xl flex items-center justify-between mx-auto">
-        {/* Application Logo */}
-        <a href="/" className="text-2xl font-bold text-white hover:opacity-80 transition-opacity">
-          Learning Center
-        </a>
+    <nav className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-500 fixed w-full z-20 top-0 left-0 shadow-lg">
+      <div className="max-w-screen-xl flex items-center justify-between mx-auto p-4">
+        {/* Logo Section */}
+        <div className="flex items-center space-x-3">
+          <Player
+            autoplay
+            loop
+            animationData={AnimationData}
+            style={{ width: "50px", height: "50px" }}
+          />
+          <a
+            href="/"
+            className="text-3xl font-bold text-white tracking-wide hover:opacity-90 transition-opacity"
+          >
+            <span className="font-logo drop-shadow-lg">
+              <span className="uppercase">Learning</span>{" "}
+              <span className="italic text-blue-300">Center</span>
+            </span>
+          </a>
+        </div>
 
-        {/* Right Side Navbar */}
-        <div className="flex items-center space-x-8 text-white font-medium">
+        {/* Right Section */}
+        <div className="flex items-center space-x-6 text-white">
           {currentUser ? (
             <>
-              {/* Order Cart for Students Only */}
               {currentUser.role === "student" && (
                 <button
                   onClick={() => router.push("/order-cart")}
@@ -89,20 +106,23 @@ export default function Navbar() {
                 </button>
               )}
 
-              {/* Profile Section */}
               <div className="relative">
                 <div
                   className="w-10 h-10 bg-white text-blue-600 font-bold rounded-full flex items-center justify-center shadow-md cursor-pointer overflow-hidden"
                   onClick={() => setShowDropdown(!showDropdown)}
                 >
                   {profileImage ? (
-                    <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                    <img
+                      src={profileImage}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     currentUser.username[0].toUpperCase()
                   )}
                 </div>
 
-                {/* Dropdown Menu */}
+                {/* Dropdown */}
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg py-2 text-gray-700 z-10 w-56">
                     {editingProfile ? (
@@ -168,11 +188,10 @@ export default function Navbar() {
               </div>
             </>
           ) : (
-            // Sign Up/Sign In for Logged-Out Users
             <div className="flex space-x-4">
               <button
                 onClick={() => router.push("/signup")}
-                className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100"
+                className="bg-white text-blue-600 px-4 py-2 rounded-full hover:bg-gray-100 shadow"
               >
                 Sign Up/Sign In
               </button>

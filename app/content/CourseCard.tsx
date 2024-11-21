@@ -24,54 +24,66 @@ interface CourseCardProps {
     onEditCourse,
     onCourseClick,
   }: CourseCardProps) => {
-    const getInitials = (name: string) => 
-      name.split(' ').map((word) => word.charAt(0)).join('').toUpperCase();
+    const getInitials = (name: string) =>
+      name
+        .split(" ")
+        .map((word) => word.charAt(0))
+        .join("")
+        .toUpperCase();
   
     return (
       <div
-        key={repo.id}
-        className="p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+        className="p-6 border border-gray-400 rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer bg-gray-100"
         onClick={() => onCourseClick(repo.name)}
       >
+        {/* Course Image or Initial */}
         {courseImage ? (
           <img
             src={courseImage}
             alt={`${repo.name} cover`}
             className="w-full h-40 object-cover rounded"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = ''; // Trigger fallback
-            }}
           />
         ) : (
           <div className="w-full h-40 flex items-center justify-center bg-gray-200 rounded">
-            <span className="text-4xl font-bold text-gray-500">{getInitials(repo.name)}</span>
+            <span className="text-5xl font-bold text-gray-500">
+              {getInitials(repo.name)}
+            </span>
           </div>
         )}
   
-        <h2 className="text-xl font-semibold text-blue-600 mt-4">{repo.name}</h2>
-        <p className="mt-2 text-gray-700">{repo.description || 'No description provided.'}</p>
-        <div className="mt-4 text-sm text-gray-500">
-          ⭐ {repo.stargazers_count} | Forks: {repo.forks_count}
+        {/* Course Details */}
+        <h2 className="text-lg font-semibold text-blue-700 mt-4 truncate">
+          {repo.name}
+        </h2>
+        <p className="text-sm text-gray-600 mt-2">
+          {repo.description || "No description provided."}
+        </p>
+  
+        {/* Stars and Forks */}
+        <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
+          <span>⭐ {repo.stargazers_count}</span>
+          <span>Forks: {repo.forks_count}</span>
         </div>
-        {currentUserRole === 'student' && (
+  
+        {/* Add to Cart or Edit Buttons */}
+        {currentUserRole === "student" && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               onAddToCart(repo.id, repo.name);
             }}
-            className="mt-4 bg-blue-600 text-white p-2 rounded"
+            className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
           >
             Add to Cart
           </button>
         )}
-        {currentUserRole === 'teacher' && (
+        {currentUserRole === "teacher" && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               onEditCourse(repo.name);
             }}
-            className="mt-4 bg-green-600 text-white p-2 rounded"
+            className="mt-4 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
           >
             Edit
           </button>
@@ -79,6 +91,8 @@ interface CourseCardProps {
       </div>
     );
   };
+  
+  
   
   export default CourseCard;
   

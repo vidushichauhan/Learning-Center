@@ -26,7 +26,7 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ selectedModule }) => {
   if (name.endsWith(".md")) {
     return (
       <div className="w-3/4 p-4">
-        <ReactMarkdown className="bg-gray-100 p-4 rounded">
+        <ReactMarkdown className="bg-gray-100 p-4 rounded shadow-md">
           {`# Markdown Content Loaded from ${download_url}`}
         </ReactMarkdown>
       </div>
@@ -44,16 +44,25 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ selectedModule }) => {
   } else if (name.match(/\.(mp4|webm|ogg)$/i)) {
     return (
       <div className="w-3/4 p-4">
-  <video
-    controls
-    style={{ height: '500px' }} // Adjust the height as needed
-    className="w-full rounded border shadow-md"
-    src={download_url}
-  >
-    Your browser does not support the video tag.
-  </video>
-</div>
-
+        <video
+          controls
+          style={{ height: "500px" }}
+          className="w-full rounded border shadow-md"
+          src={download_url}
+        >
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    );
+  } else if (name.match(/\.(pdf|doc|docx|html|md)$/i)) {
+    return (
+      <div className="w-3/4 p-4">
+        <iframe
+          src={`https://docs.google.com/gview?url=${download_url}&embedded=true`}
+          className="w-full h-96 rounded border shadow-md"
+          frameBorder="0"
+        ></iframe>
+      </div>
     );
   } else {
     return (

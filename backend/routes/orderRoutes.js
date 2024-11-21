@@ -109,29 +109,28 @@ router.get('/purchased/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const OrderedClasses = mongoose.model('OrderedClasses', orderSchema); // Use the same schema
-    const userOrders = await OrderedClasses.find({ userId }).sort({ createdAt: -1 });
+    const OrderedClasses = mongoose.model('OrderedClasses', orderSchema); // Reuse orderSchema
+    const userOrders = await OrderedClasses.find({ userId });
 
     if (userOrders.length === 0) {
       return res.status(404).json({ message: 'No purchased courses found' });
     }
 
-    const courses = userOrders.map((order) => {
-      return order.courses.map((course) => ({
+    // Extract purchased courses
+    const purchasedCourses = userOrders.flatMap(order => 
+      order.courses.map(course => ({
         courseId: course.courseId,
         courseName: course.courseName,
-        purchasedAt: order.createdAt,
-      }));
-    });
-
-    // Flatten the array of arrays
-    const purchasedCourses = [].concat(...courses);
+      }))
+    );
 
     res.status(200).json(purchasedCourses);
   } catch (error) {
     console.error('Error fetching purchased courses:', error.message);
-    res.status(500).json({ error: 'Failed to fetch purchased courses' });
+    res.status(500).json({ error: 'Failed to fetch purchased courses.' });
   }
 });
+
+
 
 module.exports = router;
