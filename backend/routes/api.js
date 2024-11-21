@@ -131,7 +131,7 @@ router.get('/readme/:repoName', async (req, res) => {
 });
 
 // Fetch folder structure from GitHub repository dynamically
-router.get('/repos/:repoName/contents/:path?', async (req, res) => {
+router.get('/repository/:repoName/contents/:path?', async (req, res) => {
   const { repoName, path } = req.params;
   const folderPath = path || ''; // Default to root folder if no path provided
   const url = `https://api.github.com/repos/${process.env.GITHUB_USER}/${repoName}/contents/${folderPath}`;
@@ -148,24 +148,39 @@ router.get('/repos/:repoName/contents/:path?', async (req, res) => {
 // Fetch images from the "image" folder dynamically
 router.get('/repos/:repoName/contents/image', async (req, res) => {
   const { repoName } = req.params;
-  const url = `https://api.github.com/repos/${process.env.GITHUB_USER}/${repoName}/contents/image`;
+  const url = `https://raw.githubusercontent.com/${process.env.GITHUB_USER}/${repoName}/main/thumbnail.jpeg`;
+
+  console.log("Fetching image for repository:");
+  console.log("Repo Name:", repoName);
+  console.log("Constructed URL:", url);
 
   try {
-    const response = await axios.get(url, getGitHubConfig());
-    const imageFile = response.data.find(
-      (file) => file.type === 'file' && (file.name === 'image.png' || file.name === 'download.png')
-    );
+    // Send a request to the raw GitHub URL
+    const response = await axios.get(url, { responseType: 'arraybuffer' });
 
-    if (imageFile) {
-      res.status(200).json({ imageUrl: imageFile.download_url });
+    // Check if response is valid
+    if (response.status === 200) {
+      console.log("Image successfully fetched:", url);
+      res.status(200).json({ imageUrl: url });
     } else {
-      res.status(404).json({ error: 'No image found in image folder' });
+      console.warn("Unexpected response status:", response.status);
+      res.status(404).json({ error: 'Image not found.' });
     }
   } catch (error) {
-    console.error('Error fetching course image:', error.message);
+    // Log error details for debugging
+    console.error("Error while fetching course image:", error.message);
+
+    if (error.response) {
+      console.error("Response Status:", error.response.status);
+      console.error("Response Data:", error.response.data);
+    }
+
     res.status(500).json({ error: 'Failed to fetch course image' });
   }
 });
+
+
+
 
 router.post("/handle-file", upload.single("file"), async (req, res) => {
   const { repoName, folderPath } = req.body;

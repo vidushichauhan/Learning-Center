@@ -33,7 +33,7 @@ interface CourseCardProps {
   
     return (
       <div
-        className="p-6 border border-gray-400 rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer bg-gray-100"
+      className="p-6 border border-gray-200 rounded-xl shadow-md hover:shadow-2xl hover:scale-105 transition-all cursor-pointer bg-gradient-to-b from-white to-gray-50"
         onClick={() => onCourseClick(repo.name)}
       >
         {/* Course Image or Initial */}

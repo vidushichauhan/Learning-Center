@@ -5,6 +5,7 @@ import { useAuth } from "../AuthContext";
 import { useRouter } from "next/navigation";
 import Player from "lottie-react";
 import AnimationData from "../Public/Animation2.json";
+import { FaShoppingCart } from "react-icons/fa";
 
 export default function Navbar() {
   const { currentUser, logout } = useAuth();
@@ -72,7 +73,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-500 fixed w-full z-20 top-0 left-0 shadow-lg">
+    <nav className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-500 fixed w-full z-20 top-0 left-0 shadow-lg rounded-b-lg ">
       <div className="max-w-screen-xl flex items-center justify-between mx-auto p-4">
         {/* Logo Section */}
         <div className="flex items-center space-x-3">
@@ -99,11 +100,12 @@ export default function Navbar() {
             <>
               {currentUser.role === "student" && (
                 <button
-                  onClick={() => router.push("/order-cart")}
-                  className="hover:underline cursor-pointer"
-                >
-                  Order Cart
-                </button>
+  onClick={() => router.push("/order-cart")}
+  className="flex items-center space-x-2 hover:underline cursor-pointer"
+>
+  <FaShoppingCart size={18} className="text-white-600" /> {/* Cart icon */}
+  <span>Order Cart</span>
+</button>
               )}
 
               <div className="relative">

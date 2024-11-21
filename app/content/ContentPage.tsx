@@ -3,18 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../AuthContext";
-import SearchBar from "./SearchBar";
+import CourseGrid from "./CourseGrid"; // Import CourseGrid
+import Footer from "../components/Footer";
+import BannerCarousel from "./BannerCarousel";
 import ErrorMessage from "./ErrorMessage";
-import CourseGrid from "./CourseGrid";
 import Modal from "../order-cart/PurchaseModal";
-import BannerCarousel from "./BannerCarousel"; // Import the BannerCarousel
 
 interface Repository {
   id: number;
   name: string;
   html_url: string;
   description: string | null;
-  price: string;
   stargazers_count: number;
   forks_count: number;
   courseImage: string;
@@ -28,36 +27,13 @@ export default function ContentPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [courseImages, setCourseImages] = useState<{ [key: string]: string }>({});
   const router = useRouter();
 
   useEffect(() => {
-    const fetchRepositories = async () => {
-      try {
-        const repoResponse = await fetch("http://localhost:4000/api/repos");
-        if (!repoResponse.ok) throw new Error("Failed to fetch repositories");
-        const repos = await repoResponse.json();
-
-        const updatedRepos = await Promise.all(
-          repos.map(async (repo: Repository) => {
-            const { description, price } = await fetchReadme(repo.name);
-            const courseImage = await fetchCourseImage(repo.name);
-            return {
-              ...repo,
-              description,
-              price,
-              courseImage,
-            };
-          })
-        );
-
-        setRepositories(updatedRepos);
-      } catch (err) {
-        setError(err.message);
-      }
-    };
-
     const fetchPurchasedCourses = async () => {
       if (!currentUser) return;
+
       try {
         const response = await fetch(
           `http://localhost:4000/api/orders/purchased/${currentUser.id}`
@@ -73,40 +49,60 @@ export default function ContentPage() {
       }
     };
 
-    fetchRepositories();
-    fetchPurchasedCourses();
-  }, [currentUser]);
+    const fetchRepositories = async () => {
+      try {
+        const repoResponse = await fetch("http://localhost:4000/api/repos");
+        if (!repoResponse.ok) throw new Error("Failed to fetch repositories");
+        const repos = await repoResponse.json();
 
-  const fetchReadme = async (repoName: string) => {
-    try {
-      const response = await fetch(
-        `http://localhost:4000/api/readme/${repoName}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch README data");
-      const { description, price } = await response.json();
-      return { description, price };
-    } catch {
-      return { description: "No description available", price: "Free" };
-    }
-  };
+        const updatedRepos = await Promise.all(
+          repos.map(async (repo: Repository) => {
+            const courseImage = await fetchCourseImage(repo.name);
+            return {
+              ...repo,
+              courseImage,
+            };
+          })
+        );
+
+        setRepositories(updatedRepos);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
+    fetchRepositories();
+    fetchPurchasedCourses(); // Correctly invoking the function here
+  }, [currentUser]); // Re-fetch whenever `currentUser` changes
 
   const fetchCourseImage = async (repoName: string) => {
     try {
       const response = await fetch(
         `http://localhost:4000/api/repos/${repoName}/contents/image`
       );
+      console.log("Image API Response:", response);
+  
       if (!response.ok) throw new Error("Image folder not found");
-      const contents = await response.json();
-      const imageFile = contents.find(
-        (file: any) =>
-          file.type === "file" &&
-          (file.name === "image.jpg" || file.name === "download.png")
-      );
-      return imageFile ? imageFile.download_url : "";
-    } catch {
+  
+      const { imageUrl } = await response.json();
+      console.log("Image URL:", imageUrl);
+  
+      // Update courseImages state
+      setCourseImages((prevImages) => {
+        const updatedImages = { ...prevImages, [repoName]: imageUrl };
+        console.log("Updated courseImages state:", updatedImages);
+        return updatedImages;
+      });
+  
+      return imageUrl;
+    } catch (error) {
+      console.error(`Error fetching image for ${repoName}:`, error.message);
       return "";
     }
   };
+  
+  
+  
 
   const addToCart = async (courseId: number, courseName: string) => {
     try {
@@ -135,6 +131,7 @@ export default function ContentPage() {
 
   const handleCourseClick = (repoName: string) => {
     if (purchasedCourses.includes(repoName)) {
+      // Properly check if the course is purchased
       router.push(`/course?repoName=${repoName}`);
     } else {
       setSelectedCourse(repoName);
@@ -155,29 +152,58 @@ export default function ContentPage() {
   );
 
   return (
-    <div className="p-6">
-      {/* Welcome Message */}
-      <h1 className="text-3xl font-bold text-center mb-6">
-        Welcome, {currentUser?.username || "Guest"}!
-      </h1>
+    <div className="bg-gray-50 min-h-screen pt-8">
+      {/* Search Bar */}
+      <div className="flex items-center gap-3 max-w-lg ml-auto mb-8 justify-end p-4">
+        <input
+          type="text"
+          placeholder="What do you want to learn?"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-gray-600 text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full hover:bg-blue-700 focus:outline-none">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 text-white"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M12.9 14.32a8 8 0 111.414-1.414l4.243 4.243a1 1 0 01-1.414 1.414l-4.243-4.243zM8 14a6 6 0 100-12 6 6 0 000 12z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
+      </div>
 
-      {/* Banner Carousel */}
-      <BannerCarousel />
+      {/* Banner */}
+      <div className="text-left max-w-4xl ml-8 mb-4">
+        <p className="text-lg font-semibold text-gray-600 mb-2">
+          Degree Programs
+        </p>
+        <h1 className="text-5xl font-bold text-gray-900 leading-tight mb-4">
+          Find a top degree that fits your life
+        </h1>
+        <p className="text-lg text-gray-700">
+          Breakthrough pricing on 100% online degrees from top universities.
+        </p>
+      </div>
+      <BannerCarousel/>
 
-      {/* Courses Uploaded Section */}
-      <h1 className="text-2xl font-bold text-center mt-8 mb-6">
-        Courses Uploaded
-      </h1>
-      <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+      {/* Course Grid */}
       {error ? (
         <ErrorMessage message={error} />
       ) : (
         <CourseGrid
-            repositories={filteredRepositories}
-            currentUserRole={currentUser?.role || ""}
-            onAddToCart={addToCart}
-            onEditCourse={handleEditCourse}
-            onCourseClick={handleCourseClick} courseImages={{}}        />
+          repositories={filteredRepositories}
+          currentUserRole={currentUser?.role || ""}
+          onAddToCart={addToCart}
+          onEditCourse={handleEditCourse}
+          onCourseClick={handleCourseClick}
+          courseImages={courseImages}
+        />
       )}
 
       {showModal && (
@@ -187,6 +213,9 @@ export default function ContentPage() {
           onClose={handleModalClose}
         />
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
