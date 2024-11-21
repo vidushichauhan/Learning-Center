@@ -130,7 +130,7 @@ export default function ContentPage() {
   };
 
   const handleCourseClick = (repoName: string) => {
-    if (purchasedCourses.includes(repoName)) {
+    if (currentUser?.role === "teacher" || purchasedCourses.includes(repoName)) {
       // Properly check if the course is purchased
       router.push(`/course?repoName=${repoName}`);
     } else {
@@ -212,13 +212,14 @@ export default function ContentPage() {
     />
   )}
 
-  {showModal && (
-    <Modal
-      show={showModal}
-      message="You need to purchase this course to view its content."
-      onClose={handleModalClose}
-    />
-  )}
+{currentUser?.role === "teacher" && showModal && (
+  <Modal
+    show={showModal}
+    message="You need to purchase this course to view its content."
+    onClose={handleModalClose}
+  />
+)}
+
 </div>
   {/* Footer */}
   <Footer />
