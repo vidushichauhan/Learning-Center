@@ -96,6 +96,13 @@ export default function Navbar() {
 
         {/* Right Section */}
         <div className="flex items-center space-x-6 text-white">
+          <button
+            onClick={() => router.push("/aboutus")}
+            className="hover:underline text-white font-semibold cursor-pointer"
+          >
+            About Us
+          </button>
+
           {currentUser ? (
             <>
               {currentUser.role === "student" && (

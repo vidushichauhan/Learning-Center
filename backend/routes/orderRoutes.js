@@ -116,11 +116,12 @@ router.get('/purchased/:userId', async (req, res) => {
       return res.status(404).json({ message: 'No purchased courses found' });
     }
 
-    // Extract purchased courses
+    // Extract purchased courses with createdAt date
     const purchasedCourses = userOrders.flatMap(order => 
       order.courses.map(course => ({
         courseId: course.courseId,
         courseName: course.courseName,
+        purchasedAt: order.createdAt, // Include createdAt from the order
       }))
     );
 
@@ -130,6 +131,7 @@ router.get('/purchased/:userId', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch purchased courses.' });
   }
 });
+
 
 
 

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../AuthContext";
 import { useRouter } from "next/navigation";
 import Modal from "./PurchaseModal";
+import Footer from "../components/Footer";
 
 interface Course {
   courseId: string;
@@ -129,7 +130,7 @@ export default function OrderCart() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen mt-20 bg-gray-50">
+    <><div className="flex flex-col min-h-screen mt-20 bg-gray-50">
       <div className="flex flex-wrap p-6">
         {/* Left Section */}
         <div className="w-full lg:w-1/2 bg-gray-100 p-8 rounded-lg shadow-md">
@@ -186,23 +187,20 @@ export default function OrderCart() {
               placeholder="Card Number (16 digits)"
               value={cardNumber}
               onChange={(e) => setCardNumber(e.target.value)}
-              className="border p-2 rounded-lg w-full"
-            />
+              className="border p-2 rounded-lg w-full" />
             <div className="flex space-x-4">
               <input
                 type="text"
                 placeholder="MM/YY"
                 value={expiryDate}
                 onChange={(e) => setExpiryDate(e.target.value)}
-                className="border p-2 rounded-lg w-1/2"
-              />
+                className="border p-2 rounded-lg w-1/2" />
               <input
                 type="text"
                 placeholder="CVV"
                 value={cvv}
                 onChange={(e) => setCvv(e.target.value)}
-                className="border p-2 rounded-lg w-1/2"
-              />
+                className="border p-2 rounded-lg w-1/2" />
             </div>
           </div>
           <button
@@ -217,8 +215,9 @@ export default function OrderCart() {
       <Modal
         show={showModal}
         message="Purchase successful! Your courses are now available."
-        onClose={handleModalClose}
-      />
+        onClose={handleModalClose} />
+        <Footer />
     </div>
+    </>
   );
 }

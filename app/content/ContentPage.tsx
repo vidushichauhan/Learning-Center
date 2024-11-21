@@ -105,30 +105,52 @@ export default function ContentPage() {
   
 
   const addToCart = async (courseId: number, courseName: string) => {
-    try {
-      const response = await fetch(
-        "http://localhost:4000/api/orders/add-to-cart",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: currentUser?.id,
-            username: currentUser?.username,
-            courseId,
-            courseName,
-          }),
-        }
-      );
-      alert(
-        response.ok
-          ? "Course added to cart successfully"
-          : "Failed to add course to cart"
-      );
-    } catch {
-      alert("An error occurred while adding the course to cart");
-    }
-  };
 
+    try {
+
+      const response = await fetch(
+
+        "http://localhost:4000/api/orders/add-to-cart",
+
+        {
+
+          method: "POST",
+
+          headers: { "Content-Type": "application/json" },
+
+          body: JSON.stringify({
+
+            userId: currentUser?.id,
+
+            username: currentUser?.username,
+
+            courseId,
+
+            courseName,
+
+          }),
+
+        }
+
+      );
+
+      alert(
+
+        response.ok
+
+          ? "Course added to cart successfully"
+
+          : "Failed to add course to cart"
+
+      );
+
+    } catch {
+
+      alert("An error occurred while adding the course to cart");
+
+    }
+
+  };
   const handleCourseClick = (repoName: string) => {
     if (currentUser?.role === "teacher" || purchasedCourses.includes(repoName)) {
       // Properly check if the course is purchased
@@ -212,7 +234,7 @@ export default function ContentPage() {
     />
   )}
 
-{currentUser?.role === "teacher" && showModal && (
+{currentUser?.role === "teacher" || showModal && (
   <Modal
     show={showModal}
     message="You need to purchase this course to view its content."
