@@ -63,7 +63,7 @@ export default function ContentPage() {
     }
   };
 
-  const addToCart = async (courseId: number, courseName: string) => {
+  const addToCart = async (courseId: number, courseName: string, price: string) => {
     try {
       const response = await fetch("http://localhost:4000/api/orders/add-to-cart", {
         method: "POST",
@@ -75,6 +75,7 @@ export default function ContentPage() {
           username: currentUser?.username,
           courseId,
           courseName,
+          price
         }),
       });
 

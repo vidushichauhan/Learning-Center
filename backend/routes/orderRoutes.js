@@ -6,32 +6,37 @@ const { Order, orderSchema } = require('../models/Order'); // Import both Order 
 // Route to add a course to the cart
 router.post('/add-to-cart', async (req, res) => {
   try {
-    const { userId, username, courseId, courseName } = req.body;
+    const { userId, courseId, courseName, price } = req.body;
 
     let order = await Order.findOne({ userId });
 
     if (order) {
-      // Check if the course is already in the cart
-      if (!order.courses.some((course) => course.courseId === String(courseId))) {
-        order.courses.push({ courseId: String(courseId), courseName }); // Add course
-        await order.save();
+      const existingCourse = order.courses.find(
+        (course) => course.courseId.toString() === courseId
+      );
+
+      if (existingCourse) {
+        existingCourse.quantity += 1;
+      } else {
+        order.courses.push({ courseId, courseName, price: price || 0, quantity: 1 }); // Default price to 0
       }
     } else {
-      // Create a new order with the course
       order = new Order({
         userId,
-        username,
-        courses: [{ courseId: String(courseId), courseName }],
+        username: req.body.username,
+        courses: [{ courseId, courseName, price: price || 0, quantity: 1 }],
       });
-      await order.save();
     }
 
+    await order.save();
     res.status(200).json({ message: 'Course added to cart successfully' });
   } catch (error) {
     console.error('Error adding course to cart:', error.message);
-    res.status(500).json({ error: 'Failed to add course to cart' });
+    res.status(500).json({ error: 'Failed to add course to cart.' });
   }
 });
+
+
 
 // Route to fetch cart items
 router.get('/cart/:userId', async (req, res) => {

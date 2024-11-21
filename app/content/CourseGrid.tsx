@@ -16,7 +16,7 @@ interface CourseGridProps {
   repositories: Repository[];
   currentUserRole: string;
   courseImages: { [key: string]: string };
-  onAddToCart: (courseId: number, courseName: string) => void;
+  onAddToCart: (courseId: number, courseName: string, price:string) => void;
   onEditCourse: (repoName: string) => void;
   onCourseClick: (repoName: string) => void;
 }

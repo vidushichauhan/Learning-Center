@@ -247,39 +247,6 @@ router.post("/handle-file", upload.single("file"), async (req, res) => {
   }
 });
 
-// Add course to cart route
-router.post('/add-to-cart', async (req, res) => {
-  try {
-    const { userId, courseId, courseName } = req.body;
-
-    let order = await Order.findOne({ userId });
-
-    if (order) {
-      const existingCourse = order.courses.find(
-        (course) => course.courseId.toString() === courseId
-      );
-
-      if (existingCourse) {
-        existingCourse.quantity += 1;
-      } else {
-        order.courses.push({ courseId, courseName, quantity: 1 });
-      }
-    } else {
-      order = new Order({
-        userId,
-        username: req.body.username,
-        courses: [{ courseId, courseName, quantity: 1 }],
-      });
-    }
-
-    await order.save();
-    res.status(200).json({ message: 'Course added to cart successfully' });
-  } catch (error) {
-    console.error('Error adding course to cart:', error.message);
-    res.status(500).json({ error: 'Failed to add course to cart.' });
-  }
-});
-
 // Remove course from cart
 router.delete('/remove', async (req, res) => {
   const { userId, courseId } = req.body;

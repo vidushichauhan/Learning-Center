@@ -21,7 +21,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true })); // Set URL-encod
 
 // Route handlers
 app.use('/api', apiRoutes); // Mount general API routes
-app.use('/api/readme', readMeRoutes); // Mount ReadMe routes under /api/readme
+app.use('/readme', readMeRoutes); // Mount ReadMe routes under /api/readme
 app.use('/apiProgress', apiProgressRoutes); // Mount progress routes under /apiProgress
 app.use('/api/orders', orderRoutes); // Mount order routes under /api/orders
 
