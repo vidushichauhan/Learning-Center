@@ -73,7 +73,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-500 fixed w-full z-20 top-0 left-0 shadow-lg rounded-b-lg ">
+    <nav className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-500 fixed w-full z-20 top-0 left-0 shadow-lg rounded-b-lg">
       <div className="max-w-screen-xl flex items-center justify-between mx-auto p-4">
         {/* Logo Section */}
         <div className="flex items-center space-x-3">
@@ -126,8 +126,10 @@ export default function Navbar() {
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />
-                  ) : (
+                  ) : currentUser?.username ? (
                     currentUser.username[0].toUpperCase()
+                  ) : (
+                    "?"
                   )}
                 </div>
 
@@ -171,8 +173,7 @@ export default function Navbar() {
                       </div>
                     ) : (
                       <>
-                        {/* Purchased Orders visible for both students and teachers */}
-                        {(currentUser.role === "student") && (
+                        {currentUser.role === "student" && (
                           <button
                             onClick={() => router.push("/purchased-orders")}
                             className="block w-full text-left px-4 py-2 hover:bg-gray-100"

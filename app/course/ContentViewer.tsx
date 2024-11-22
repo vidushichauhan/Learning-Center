@@ -108,7 +108,7 @@ const ContentViewer: React.FC<ContentViewerProps> = ({
         </video>
       </div>
     );
-  } else if (name.match(/\.(pdf|doc|docx|html)$/i)) {
+  } else if (name.match(/\.(pdf|doc|docx|html|txt)$/i)) {
     return (
       <div className="w-3/4 p-4">
         <iframe

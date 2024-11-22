@@ -1,6 +1,5 @@
-require("dotenv").config();
-const express = require("express");
 const axios = require("axios");
+const express = require("express");
 const router = express.Router();
 
 router.get("/:repoName", async (req, res) => {
@@ -15,17 +14,25 @@ router.get("/:repoName", async (req, res) => {
 
     console.log("Fetched README content:", content);
 
-    const parseMarkdown = (section, regex) => {
-      const match = section.match(regex);
+    // Helper function to parse Markdown content
+    const parseMarkdown = (content, regex) => {
+      const match = content.match(regex);
       return match ? match[1].trim() : null;
     };
 
-    // Extract course details
-    const courseName = parseMarkdown(content, /# Course Name: (.+)/);
-    const description = parseMarkdown(content, /\*\*Course Description:\*\* (.+)/);
-    const price = parseMarkdown(content, /\*\*Course Price:\*\* \$?(.+)/);
-    const teacher = parseMarkdown(content, /\*\*Teacher:\*\* (.+)/);
+    // Regex patterns for extracting course details
+    const courseNameRegex = /^# (.+)/; // Matches the first-level heading directly
+    const descriptionRegex = /\*\*Course Description:\*\* ?(.+)/i;
+    const priceRegex = /\*\*Course Price:\*\* ?\$?(.+)/i;
+    const teacherRegex = /\*\*Teacher:\*\* ?(.+)/i;
 
+    // Extract course details
+    const courseName = parseMarkdown(content, courseNameRegex);
+    const description = parseMarkdown(content, descriptionRegex);
+    const price = parseMarkdown(content, priceRegex);
+    const teacher = parseMarkdown(content, teacherRegex);
+
+    // Respond with extracted data or default values
     res.status(200).json({
       courseName: courseName || "Unknown Course",
       description: description || "No description available.",
