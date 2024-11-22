@@ -4,7 +4,7 @@ import { fetchContents } from "../utils/api";
 interface RepoContent {
   name: string;
   path: string;
-  type: string; // 'file' or 'dir'
+  type: string;
   download_url: string | null;
 }
 
@@ -25,22 +25,32 @@ const Sidebar: React.FC<SidebarProps> = ({
   setSubDirectories,
   repoName,
 }) => {
+  const filterValidFiles = (items: RepoContent[]): RepoContent[] =>
+    items.filter((item) => !/^(readme(\.md|\.txt)?)|\.keep$/i.test(item.name));
+
   const handleDirectoryClick = async (path: string) => {
     if (!subDirectories[path]) {
       try {
         const data = await fetchContents(repoName, path);
-        setSubDirectories((prev) => ({ ...prev, [path]: data }));
+        if (Array.isArray(data)) {
+          setSubDirectories((prev) => ({
+            ...prev,
+            [path]: filterValidFiles(data),
+          }));
+        }
       } catch (error) {
         console.error("Failed to fetch directory contents", error);
       }
     }
   };
 
+  const filteredContents = filterValidFiles(contents);
+
   return (
     <div className="w-1/4 bg-gray-100 p-4 border-r overflow-y-auto">
       <h2 className="text-lg font-bold mb-4">Course Content</h2>
       <ul className="space-y-2">
-        {contents.map((item) => (
+        {filteredContents.map((item) => (
           <li key={item.path}>
             <div
               onClick={() =>

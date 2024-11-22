@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 interface RepoContent {
@@ -10,11 +10,65 @@ interface RepoContent {
 
 interface ContentViewerProps {
   selectedModule: RepoContent | null;
+  repoName: string; // To fetch course details
 }
 
-const ContentViewer: React.FC<ContentViewerProps> = ({ selectedModule }) => {
+const ContentViewer: React.FC<ContentViewerProps> = ({
+  selectedModule,
+  repoName,
+}) => {
+  const [courseDetails, setCourseDetails] = useState<{
+    courseName: string;
+    description: string;
+  }>({ courseName: "Loading...", description: "Loading..." });
+  const [loadingDetails, setLoadingDetails] = useState(true);
+
+  useEffect(() => {
+    const fetchCourseDetails = async () => {
+      console.log("Fetching course details for:", repoName); // Debug log
+      try {
+        const response = await fetch(`http://localhost:4000/readme/${repoName}`);
+        console.log("API Response:", response); // Debug log
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Parsed Data:", data); // Debug log
+          setCourseDetails({
+            courseName: data.courseName || "Unknown Course",
+            description: data.description || "No description available.",
+          });
+        } else {
+          console.error("Failed to fetch course details.");
+          setCourseDetails({
+            courseName: "Unknown Course",
+            description: "Failed to fetch course details.",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching course details:", error);
+        setCourseDetails({
+          courseName: "Unknown Course",
+          description: "An error occurred while fetching course details.",
+        });
+      } finally {
+        setLoadingDetails(false);
+      }
+    };
+
+    fetchCourseDetails();
+  }, [repoName]);
+
   if (!selectedModule) {
-    return <p className="text-gray-600">Select a module to view its content.</p>;
+    if (loadingDetails) {
+      return <p className="text-gray-600">Loading course details...</p>;
+    }
+    return (
+      <div className="w-3/4 p-6 bg-gray-100 rounded shadow-md">
+        <h1 className="text-2xl font-bold text-blue-600 mb-4">
+          {courseDetails.courseName}
+        </h1>
+        <p className="text-gray-700 text-lg">{courseDetails.description}</p>
+      </div>
+    );
   }
 
   const { name, download_url } = selectedModule;
@@ -54,7 +108,7 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ selectedModule }) => {
         </video>
       </div>
     );
-  } else if (name.match(/\.(pdf|doc|docx|html|md)$/i)) {
+  } else if (name.match(/\.(pdf|doc|docx|html)$/i)) {
     return (
       <div className="w-3/4 p-4">
         <iframe

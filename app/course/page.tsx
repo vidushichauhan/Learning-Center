@@ -101,7 +101,7 @@ export default function CoursePage() {
         setSubDirectories={setSubDirectories}
         repoName={repoName}
       />
-      <ContentViewer selectedModule={selectedModule} />
+      <ContentViewer selectedModule={selectedModule} repoName={repoName} />
       {currentUser?.role === "student" && (
         <ProgressTracker
           completedModules={completedModules}
