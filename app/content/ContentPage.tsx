@@ -155,14 +155,28 @@ export default function ContentPage() {
           </p>
         </div>
         <div className="flex items-center gap-5 max-w-lg w-full md:w-full mt-6 md:mt-0">
-          <input
-            type="text"
-            placeholder="What do you want to learn?"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-gray-600 text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        <input
+          type="text"
+          placeholder="What do you want to learn?"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-gray-600 text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+          <button className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full hover:bg-blue-700 focus:outline-none">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 text-white"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M12.9 14.32a8 8 0 111.414-1.414l4.243 4.243a1 1 0 01-1.414 1.414l-4.243-4.243zM8 14a6 6 0 100-12 6 6 0 000 12z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+</div>
       </div>
       <BannerCarousel/>
 
