@@ -25,36 +25,41 @@ const Sidebar: React.FC<SidebarProps> = ({
   setSubDirectories,
   repoName,
 }) => {
+  // Helper to filter out invalid files (e.g., .keep)
   const filterValidFiles = (items: RepoContent[]): RepoContent[] =>
-    items.filter((item) => !/^(readme(\.md|\.txt)?)|\.keep$/i.test(item.name));
+    items.filter((item) => !/^\.(keep)$/i.test(item.name));
 
+  // Handle directory click to fetch subdirectory contents
   const handleDirectoryClick = async (path: string) => {
     if (!subDirectories[path]) {
       try {
-        const data = await fetchContents(repoName, path);
+        const data = await fetchContents(repoName, path); // Fetch content from API
         if (Array.isArray(data)) {
+          // Update state with new subdirectory data
           setSubDirectories((prev) => ({
             ...prev,
             [path]: filterValidFiles(data),
           }));
+        } else {
+          console.error("Data fetched is not an array");
         }
       } catch (error) {
-        console.error("Failed to fetch directory contents", error);
+        console.error("Error fetching subdirectory contents:", error);
       }
     }
   };
 
-  const filteredContents = filterValidFiles(contents);
-
-  return (
-    <div className="w-1/4 bg-gray-100 p-4 border-r overflow-y-auto">
-      <h2 className="text-lg font-bold mb-4">Course Content</h2>
-      <ul className="space-y-2">
-        {filteredContents.map((item) => (
+  // Render directory content recursively
+  const renderDirectory = (items: RepoContent[], parentPath: string) => {
+    return (
+      <ul className="ml-4 space-y-2">
+        {items.map((item) => (
           <li key={item.path}>
             <div
               onClick={() =>
-                item.type === "dir" ? handleDirectoryClick(item.path) : onModuleClick(item)
+                item.type === "dir"
+                  ? handleDirectoryClick(item.path)
+                  : onModuleClick(item)
               }
               className={`p-2 rounded cursor-pointer ${
                 completedModules.includes(item.path) ? "bg-green-200" : "bg-white"
@@ -62,21 +67,36 @@ const Sidebar: React.FC<SidebarProps> = ({
             >
               {item.type === "dir" ? "📂" : "📄"} {item.name}
             </div>
-            {subDirectories[item.path] && (
-              <ul className="ml-4 space-y-2">
-                {subDirectories[item.path].map((subItem) => (
-                  <li
-                    key={subItem.path}
-                    onClick={() => onModuleClick(subItem)}
-                    className={`p-2 rounded cursor-pointer ${
-                      completedModules.includes(subItem.path) ? "bg-green-200" : "bg-white"
-                    } hover:bg-gray-200`}
-                  >
-                    {subItem.type === "dir" ? "📂" : "📄"} {subItem.name}
-                  </li>
-                ))}
-              </ul>
-            )}
+            {/* Recursively render subdirectories */}
+            {subDirectories[item.path] &&
+              renderDirectory(subDirectories[item.path], item.path)}
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  return (
+    <div className="w-1/4 bg-gray-100 p-4 border-r overflow-y-auto">
+      <h2 className="text-lg font-bold mb-4">Course Content</h2>
+      <ul className="space-y-2">
+        {filterValidFiles(contents).map((item) => (
+          <li key={item.path}>
+            <div
+              onClick={() =>
+                item.type === "dir"
+                  ? handleDirectoryClick(item.path)
+                  : onModuleClick(item)
+              }
+              className={`p-2 rounded cursor-pointer ${
+                completedModules.includes(item.path) ? "bg-green-200" : "bg-white"
+              } hover:bg-gray-200`}
+            >
+              {item.type === "dir" ? "📂" : "📄"} {item.name}
+            </div>
+            {/* Render subdirectories if they exist */}
+            {subDirectories[item.path] &&
+              renderDirectory(subDirectories[item.path], item.path)}
           </li>
         ))}
       </ul>

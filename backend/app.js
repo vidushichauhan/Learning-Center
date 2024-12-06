@@ -7,7 +7,7 @@ const apiRoutes = require('./routes/api'); // Import general API routes
 const readMeRoutes = require('./routes/ReadMe'); // Import ReadMe routes
 const apiProgressRoutes = require('./routes/UserProgressApi'); // Import progress routes
 const orderRoutes = require('./routes/orderRoutes'); // Import order routes
-
+const courseRoutes = require('./pages/api/getCourseByName.js');
 // Load environment variables
 dotenv.config();
 
@@ -24,6 +24,7 @@ app.use('/api', apiRoutes); // Mount general API routes
 app.use('/readme', readMeRoutes); // Mount ReadMe routes under /api/readme
 app.use('/apiProgress', apiProgressRoutes); // Mount progress routes under /apiProgress
 app.use('/api/orders', orderRoutes); // Mount order routes under /api/orders
+app.use('/course',courseRoutes);
 
 // MongoDB connection
 mongoose

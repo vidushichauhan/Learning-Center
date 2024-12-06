@@ -134,16 +134,43 @@ router.get('/readme/:repoName', async (req, res) => {
 router.get('/repository/:repoName/contents/:path?', async (req, res) => {
   const { repoName, path } = req.params;
   const folderPath = path || ''; // Default to root folder if no path provided
-  const url = `https://api.github.com/repos/${process.env.GITHUB_USER}/${repoName}/contents/${folderPath}`;
+  const encodedPath = encodeURIComponent(folderPath); // Ensure the path is properly encoded
+  const url = `https://api.github.com/repos/${process.env.GITHUB_USER}/${repoName}/contents/${encodedPath}`;
+
+  // Validate Parameters
+  if (!repoName) {
+    return res.status(400).json({ error: 'Repository name is required.' });
+  }
 
   try {
     const response = await axios.get(url, getGitHubConfig());
+
+    // Handle File Content
+    if (response.data.type === 'file') {
+      const fileContent = Buffer.from(response.data.content, 'base64').toString('utf-8');
+      return res.status(200).json({ type: 'file', content: fileContent });
+    }
+
+    // Handle Empty Folder
+    if (Array.isArray(response.data) && response.data.length === 0) {
+      return res.status(200).json({ message: 'The folder is empty.', contents: [] });
+    }
+
+    // Send Folder Contents
     res.status(200).json(response.data); // Send folder contents as JSON
   } catch (error) {
     console.error('Error fetching repository contents:', error.message);
+    if (error.response) {
+      console.error('GitHub Response Status:', error.response.status);
+      console.error('GitHub Response Data:', error.response.data);
+      return res.status(error.response.status).json({
+        error: error.response.data.message || 'Failed to fetch repository contents.',
+      });
+    }
     res.status(500).json({ error: 'Failed to fetch repository contents.' });
   }
 });
+
 
 // Fetch images from the "image" folder dynamically
 router.get('/repos/:repoName/contents/image', async (req, res) => {

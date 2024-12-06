@@ -13,7 +13,7 @@ const banners = [
   },
   {
     id: 3,
-    imageUrl: "https://i.pinimg.com/736x/9b/70/de/9b70de601f8d715cb258756b997313df.jpg",
+    imageUrl: "https://media.licdn.com/dms/image/v2/D4D08AQEiV2YJEvdMAg/croft-frontend-shrinkToFit1024/croft-frontend-shrinkToFit1024/0/1731982161791?e=2147483647&v=beta&t=MQd27XLkE-h_B4uSzSQsvmvCbQWr4ZMRXP4eMHcWIFw",
     altText: "Earn Rewards by Referring Friends!",
   },
 ];

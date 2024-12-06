@@ -22,22 +22,20 @@ const ContentViewer: React.FC<ContentViewerProps> = ({
     description: string;
   }>({ courseName: "Loading...", description: "Loading..." });
   const [loadingDetails, setLoadingDetails] = useState(true);
+  const [markdownContent, setMarkdownContent] = useState<string>("");
 
   useEffect(() => {
     const fetchCourseDetails = async () => {
-      console.log("Fetching course details for:", repoName); // Debug log
+      console.log("Fetching course details for:", repoName);
       try {
         const response = await fetch(`http://localhost:4000/readme/${repoName}`);
-        console.log("API Response:", response); // Debug log
         if (response.ok) {
           const data = await response.json();
-          console.log("Parsed Data:", data); // Debug log
           setCourseDetails({
             courseName: data.courseName || "Unknown Course",
             description: data.description || "No description available.",
           });
         } else {
-          console.error("Failed to fetch course details.");
           setCourseDetails({
             courseName: "Unknown Course",
             description: "Failed to fetch course details.",
@@ -56,6 +54,30 @@ const ContentViewer: React.FC<ContentViewerProps> = ({
 
     fetchCourseDetails();
   }, [repoName]);
+
+  useEffect(() => {
+    const fetchMarkdownContent = async () => {
+      if (selectedModule && selectedModule.download_url) {
+        try {
+          const response = await fetch(selectedModule.download_url);
+          if (response.ok) {
+            const text = await response.text();
+            setMarkdownContent(text);
+          } else {
+            console.error("Failed to fetch markdown content.");
+            setMarkdownContent("Failed to load content.");
+          }
+        } catch (error) {
+          console.error("Error fetching markdown content:", error);
+          setMarkdownContent("An error occurred while loading content.");
+        }
+      }
+    };
+
+    if (selectedModule?.name.endsWith(".md")) {
+      fetchMarkdownContent();
+    }
+  }, [selectedModule]);
 
   if (!selectedModule) {
     if (loadingDetails) {
@@ -79,10 +101,8 @@ const ContentViewer: React.FC<ContentViewerProps> = ({
 
   if (name.endsWith(".md")) {
     return (
-      <div className="w-3/4 p-4">
-        <ReactMarkdown className="bg-gray-100 p-4 rounded shadow-md">
-          {`# Markdown Content Loaded from ${download_url}`}
-        </ReactMarkdown>
+      <div className="w-3/4 p-4 bg-gray-100 rounded shadow-md">
+        <ReactMarkdown>{markdownContent}</ReactMarkdown>
       </div>
     );
   } else if (name.match(/\.(png|jpg|jpeg|gif)$/i)) {

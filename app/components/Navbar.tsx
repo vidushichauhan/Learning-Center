@@ -25,7 +25,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout();
-    router.push("/");
+    router.push("/signup");
     localStorage.removeItem("profileImage");
   };
 
